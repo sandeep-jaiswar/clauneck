@@ -16,5 +16,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build all modules
-        run: gradle build --no-daemon
-        working-directory: .
+        run: ./gradlew build --no-daemon
