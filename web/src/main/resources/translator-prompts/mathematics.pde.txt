@@ -1,0 +1,138 @@
+# Partial Differential Equations (mathematics.pde)
+
+## Domain Purpose
+
+Solve partial differential equations including heat diffusion, wave propagation, elliptic equations (Laplace/Poisson), and boundary value problems. Supports both analytical (separation of variables, D'Alembert, method of characteristics) and numerical methods (finite difference, iterative solvers).
+
+## Input Quantities
+
+- `domain_length`: Length of spatial domain [0, L] (meters or dimensionless)
+- `time_span`: Time interval [0, T] to solve (seconds)
+- `diffusivity`: Thermal diffusivity α for heat equation (m²/s)
+- `wave_speed`: Wave propagation speed c (m/s)
+- `num_points`: Grid resolution for 2D problems (integer)
+- `initial_condition`: Initial profile u(x, 0) as string (e.g., "sin(pi*x)") or numeric array
+- `initial_velocity`: Initial velocity ∂u/∂t(x, 0) for wave problems
+- `initial_displacement`: Initial displacement for wave problems
+- `boundary_conditions`: Dirichlet/Neumann/Robin BC as dict or array
+- `source_term`: Source function f(x, y) for Poisson equation
+- `pde_type`: Type of PDE ("heat", "wave", "laplace", "poisson")
+- `bc_type`: Boundary condition type ("dirichlet", "neumann", "robin", "periodic")
+- `bc_values`: Array of BC values [value_at_0, value_at_L]
+- `bc_value`: Single BC value for constant BC
+- `flux_value`: Normal derivative flux for Neumann BC
+- `period`: Period for periodic boundary conditions
+- `parameter`: Generic parameter (diffusivity for heat, wave speed for wave, etc.)
+
+## Supported Operations (12)
+
+1. **heat_equation_1d**(domain_length, time_span, diffusivity, initial_condition, [bc_type, bc_values])
+   - Solves ∂u/∂t = α * ∂²u/∂x² with Dirichlet, Neumann, or Robin BCs
+   - Uses finite difference (FTCS) or symbolic solution for simple ICs
+   - Returns solution at final time as spatial grid values
+   - Example: "Solve heat diffusion on [0,1] for 0.1s with diffusivity 1.0 and IC u(x,0)=sin(πx)"
+
+2. **wave_equation_1d**(domain_length, time_span, wave_speed, [initial_displacement, initial_velocity, bc_type, bc_values])
+   - Solves ∂²u/∂t² = c² * ∂²u/∂x² with IC and BC
+   - Supports zero initial velocity (plucked string)
+   - Uses finite difference with Courant stability check
+   - Example: "Solve 1D wave equation on [0,1] for time 0.1 with wave speed 1 and IC sin(πx)"
+
+3. **laplace_equation**(domain_length, [num_points, boundary_conditions])
+   - Solves 2D Laplace ∇²u = 0 on [0,L]×[0,L]
+   - Dirichlet BC: dict {"top": value, "bottom": value, "left": value, "right": value}
+   - Uses Jacobi iteration with automatic convergence
+   - Returns solution as flattened 2D grid
+   - Example: "Solve Laplace equation on unit square with u=1 at top, u=0 elsewhere"
+
+4. **poisson_equation**(domain_length, [num_points, source_term, boundary_conditions])
+   - Solves 2D Poisson ∇²u = f(x,y) with Dirichlet BC
+   - Source term as string: "1.0", "sin(pi*x)*cos(pi*y)", etc.
+   - Jacobi iteration with source coupling
+   - Example: "Solve ∇²u = 1 on [0,1]×[0,1] with zero boundary conditions"
+
+5. **dirichlet_bc**(bc_value)
+   - Encodes Dirichlet boundary condition u = constant
+   - Returns the BC value
+   - Used in composed models: lhs="bc", rhs="dirichlet_bc(0.5)"
+
+6. **neumann_bc**(flux_value)
+   - Encodes Neumann boundary condition ∂u/∂n = constant
+   - Returns the flux value
+   - Used when specifying normal derivative on boundary
+
+7. **robin_bc**(alpha, beta, gamma)
+   - Encodes Robin BC α*u + β*∂u/∂n = γ
+   - Returns dict {"alpha", "beta", "gamma"}
+   - Generalization of Dirichlet (β=0) and Neumann (α=0)
+   - Example: robin_bc(1.0, 1.0, 1.0) means u + ∂u/∂n = 1
+
+8. **periodic_bc**(period)
+   - Encodes periodic boundary condition u(0) = u(L)
+   - Returns the period value
+   - Used for periodic domain problems (e.g., advection on torus)
+
+9. **method_of_characteristics**(domain_length, time_span, wave_speed, [initial_condition])
+   - Solves advection ∂u/∂t + c*∂u/∂x = 0 analytically
+   - Traces characteristics: u constant along x - c*t = const
+   - Exact solution with periodic extension
+   - Example: "Solve advection of sin(πx) over [0,1] for time 0.5 with speed 2"
+
+10. **separation_of_variables**(domain_length, time_span, [pde_type, diffusivity])
+    - Solves PDE via analytical separation u(x,t) = X(x)*T(t)
+    - pde_type: "heat" or "wave"
+    - For heat: u(x,t) = exp(-π²*α*t/L²) * sin(πx/L)
+    - For wave: u(x,t) = sin(πx/L) * cos(πct/L)
+    - Example: "Find heat equation solution via separation of variables"
+
+11. **finite_difference_solve**(domain_length, time_span, [pde_type, parameter, initial_condition])
+    - Generic dispatcher to heat_equation_1d or wave_equation_1d
+    - pde_type: "heat" or "wave"
+    - parameter: diffusivity (heat) or wave speed (wave)
+    - Example: "Solve heat PDE numerically on [0,1] for 0.1s"
+
+12. **d_alembert_solution**(domain_length, time_span, wave_speed, [initial_displacement, initial_velocity])
+    - Analytical solution for 1D wave equation via D'Alembert formula
+    - u(x,t) = (1/2)[f(x+ct) + f(x-ct)] + (1/(2c)) ∫ g(s) ds
+    - Exact for smooth initial conditions
+    - Example: "Wave equation solution via D'Alembert with IC sin(πx) and zero velocity"
+
+## Solver Methods
+
+- **Symbolic**: Exact analytical solutions (separation of variables, D'Alembert)
+- **Numeric (FTCS)**: Finite-Time Centered-Space finite difference (stable for r ≤ 0.5)
+- **Iterative (Jacobi)**: Jacobi iteration for elliptic problems (Laplace, Poisson)
+- **Characteristics**: Method of characteristics for advection/hyperbolic PDEs
+
+## Constraints & Stability
+
+- **Heat Equation**: Requires Courant number r = α*Δt/Δx² ≤ 0.5 (implicit methods stable unconditionally)
+- **Wave Equation**: Requires Courant number r = c*Δt/Δx ≤ 1 (CFL condition)
+- **Laplace/Poisson**: Iterative solvers converge for diagonally dominant operators (all test cases satisfied)
+- **Grid Resolution**: Minimum 5 points per dimension; higher resolution for accuracy
+
+## Example Queries
+
+1. **Heat Diffusion**: "Solve the 1D heat equation ∂u/∂t = ∂²u/∂x² on [0,1] with u(x,0)=sin(πx) and u(0,t)=u(1,t)=0 for t=0 to 0.1"
+   - Expected Model: domain="mathematics.pde", operations=[heat_equation_1d(1.0, 0.1, 1.0, "sin(pi*x)")]
+
+2. **Wave Propagation**: "Solve the 1D wave equation ∂²u/∂t²=∂²u/∂x² with initial pluck u(x,0)=sin(2πx) and zero velocity for t=0 to 0.5"
+   - Expected Model: domain="mathematics.pde", operations=[wave_equation_1d(1.0, 0.5, 1.0, "sin(2*pi*x)")]
+
+3. **Laplace on Rectangle**: "Solve ∇²u=0 on [0,1]×[0,1] with u=100 at top, u=0 on sides and bottom"
+   - Expected Model: domain="mathematics.pde", operations=[laplace_equation(1.0, 30, {"top": 100, "bottom": 0, "left": 0, "right": 0})]
+
+4. **Advection**: "Solve ∂u/∂t + 2*∂u/∂x = 0 with initial profile sin(πx) over [0,1] for t=0.2"
+   - Expected Model: domain="mathematics.pde", operations=[method_of_characteristics(1.0, 0.2, 2.0)]
+
+5. **Poisson with Source**: "Solve ∇²u = 1 on [0,1]×[0,1] with zero boundary conditions"
+   - Expected Model: domain="mathematics.pde", operations=[poisson_equation(1.0, 50, "1.0", {"top": 0, "bottom": 0, "left": 0, "right": 0})]
+
+## Notes
+
+- All solvers are deterministic: identical input → identical output
+- Numeric methods use standard discretization (FTCS for time-dependent, Jacobi for elliptic)
+- Symbolic solutions exact when available; numeric fallback for others
+- Boundary conditions encoded as dicts for 2D problems or arrays for 1D
+- Solver automatically selects time step size to ensure stability
+- Solution returned as spatial grid values at final time (or full grid for 2D)
