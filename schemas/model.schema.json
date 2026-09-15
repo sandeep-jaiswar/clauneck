@@ -13,19 +13,7 @@
       "type": "string",
       "enum": [
         "physics.mechanics",
-        "physics.thermodynamics",
-        "chemistry.kinetics",
-        "mathematics.general",
-        "mathematics.algebra",
-        "mathematics.calculus",
-        "mathematics.linear_algebra",
-        "mathematics.statistics",
-        "mathematics.trigonometry",
-        "mathematics.number_theory",
-        "mathematics.geometry",
-        "mathematics.optimization",
-        "mathematics.complex_numbers",
-        "mathematics.ode"
+        "mathematics.statistics"
       ],
       "description": "Domain classification for this model"
     },
