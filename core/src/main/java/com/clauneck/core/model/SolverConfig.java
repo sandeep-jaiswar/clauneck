@@ -44,16 +44,16 @@ public class SolverConfig {
 
   private final Method method;
   private final double tolerance;
-  private final TimeSpan timeSpan;
+  private final Optional<TimeSpan> timeSpan;
 
   @JsonCreator
   public SolverConfig(
       @JsonProperty(value = "method", required = true) Method method,
       @JsonProperty(value = "tolerance", required = true) double tolerance,
-      @JsonProperty(value = "timeSpan", required = true) TimeSpan timeSpan) {
+      @JsonProperty("timeSpan") TimeSpan timeSpan) {
     this.method = Objects.requireNonNull(method);
     this.tolerance = tolerance;
-    this.timeSpan = Objects.requireNonNull(timeSpan);
+    this.timeSpan = Optional.ofNullable(timeSpan);
   }
 
   public static Builder builder() {
@@ -83,14 +83,13 @@ public class SolverConfig {
     public SolverConfig build() {
       Objects.requireNonNull(method, "method is required");
       Objects.requireNonNull(tolerance, "tolerance is required");
-      Objects.requireNonNull(timeSpan, "timeSpan is required");
       return new SolverConfig(method, tolerance, timeSpan);
     }
   }
 
   public Method getMethod() { return method; }
   public double getTolerance() { return tolerance; }
-  public TimeSpan getTimeSpan() { return timeSpan; }
+  public Optional<TimeSpan> getTimeSpan() { return timeSpan; }
 
   @JsonInclude(JsonInclude.Include.NON_ABSENT)
   public static class TimeSpan {

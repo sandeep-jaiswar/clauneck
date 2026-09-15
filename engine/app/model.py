@@ -2,7 +2,7 @@
 Pydantic models for scientific prototyping engine.
 Maps to schemas/model.schema.json — same contract across Java and Python.
 """
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 from pydantic import BaseModel, model_validator
 from enum import Enum
 
@@ -38,7 +38,7 @@ class DimensionVector(BaseModel):
 class Quantity(BaseModel):
     name: str
     description: Optional[str] = None
-    value: Optional[float] = None
+    value: Optional[Union[float, List[float], List[List[float]]]] = None
     siUnit: str
     dimensionVector: Optional[DimensionVector] = None
     isKnown: bool
@@ -66,7 +66,7 @@ class TimeSpan(BaseModel):
 class Solver(BaseModel):
     method: SolverMethod
     tolerance: float
-    timeSpan: TimeSpan
+    timeSpan: Optional[TimeSpan] = None
 
 
 class Metadata(BaseModel):

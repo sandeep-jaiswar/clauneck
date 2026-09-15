@@ -1,4 +1,4 @@
-.PHONY: help build test run clean
+.PHONY: help build test run clean stop
 
 help:
 	@echo "Clauneck Scientific Prototyping Platform"
@@ -7,6 +7,7 @@ help:
 	@echo "  make build          Build all modules (Java + Python)"
 	@echo "  make test           Run all tests (Java + Python)"
 	@echo "  make run            Start services (engine + web spring boot)"
+	@echo "  make stop           Stop all running services"
 	@echo "  make clean          Clean all build artifacts"
 	@echo "  make engine-build   Build Python engine only"
 	@echo "  make engine-test    Test Python engine only"
@@ -62,5 +63,13 @@ engine-run-bg:
 	cd engine && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 > /tmp/engine.log 2>&1 &
 	@sleep 1
 	@echo "✓ Engine started (PID logged)"
+
+# Stop targets
+stop:
+	@echo "Stopping all services..."
+	@pkill -f "uvicorn app.main:app" 2>/dev/null || echo "  Engine not running"
+	@pkill -f "gradle.*bootRun\|java.*springframework" 2>/dev/null || echo "  Web server not running"
+	@sleep 1
+	@echo "✓ All services stopped"
 
 .DEFAULT_GOAL := help

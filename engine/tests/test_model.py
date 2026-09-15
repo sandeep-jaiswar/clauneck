@@ -5,8 +5,9 @@ from app.model import Quantity, Solver, SolverMethod, TimeSpan
 
 
 def test_solver_settings_are_required():
-    with pytest.raises(ValidationError):
-        Solver(method=SolverMethod.RK45, tolerance=1e-6)
+    # timeSpan is now optional (required only for time-dependent problems)
+    solver = Solver(method=SolverMethod.RK45, tolerance=1e-6)
+    assert solver.timeSpan is None
 
     solver = Solver(
         method=SolverMethod.RK45,

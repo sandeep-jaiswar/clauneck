@@ -8,7 +8,8 @@ from app.model import (
     ScientificModel, Quantity, Equation, EquationType, Solver, SolverMethod,
     TimeSpan, Metadata, DimensionVector
 )
-from app.solver import GeneralSolver, ProjectileMotionSolver
+from app.solver import GeneralSolver
+from app.solvers.physics_mechanics import ProjectileMotionSolver
 
 
 @pytest.fixture

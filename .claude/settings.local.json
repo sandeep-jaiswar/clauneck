@@ -58,10 +58,21 @@
       "Bash(./gradlew :web:test --console=plain)",
       "Bash(git fetch *)",
       "Bash(git pull *)",
-      "Bash(./gradlew :web:test --info)"
+      "Bash(./gradlew :web:test --info)",
+      "Bash(.venv/bin/python /tmp/claude-1000/-media-sandeep-DataDrive2-clauneck/7f6f557d-0549-4cfc-962c-79ef61eef506/scratchpad/test_projectile_scenarios.py)",
+      "Bash(python -m pip install -e \".[dev]\" -q)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(./gradlew test *)"
     ],
     "ask": [
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(./gradlew :web:test --info)",
+      "Bash(make build *)",
+      "Bash(python -m pip install -e .)",
+      "Bash(python3 *)",
+      "Bash(make test *)",
+      "Bash(git rm *)",
+      "Bash(xargs ls -la)"
     ]
   }
 }

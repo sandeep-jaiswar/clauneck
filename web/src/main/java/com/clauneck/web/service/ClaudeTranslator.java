@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -36,77 +38,141 @@ public class ClaudeTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeTranslator.class);
 
-    private static final String SUPPORTED_DOMAIN = "physics.mechanics";
+    private static final Set<String> SUPPORTED_DOMAINS = new HashSet<>(java.util.Arrays.asList(
+            "physics.mechanics",
+            "mathematics.algebra",
+            "mathematics.calculus",
+            "mathematics.linear_algebra",
+            "mathematics.statistics",
+            "mathematics.trigonometry",
+            "mathematics.number_theory",
+            "mathematics.geometry",
+            "mathematics.optimization",
+            "mathematics.complex_numbers",
+            "mathematics.ode"
+    ));
 
     private static final String SYSTEM_PROMPT = """
             You are a scientific model translator for the Clauneck platform.
 
-            Your role: Convert natural language physics problems into structured Model JSON.
+            Your role: Convert natural language scientific and mathematical problems into structured Model JSON.
 
             CRITICAL CONSTRAINTS:
             1. Output ONLY valid JSON matching the schema below. No preamble, no explanation, no markdown code fences.
-            2. Domain: ONLY physics.mechanics (projectile motion). Reject other domains.
-            3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.).
-            4. Always include drag_coeff. Use 0.0 when the user does not mention drag, air resistance, or friction.
-            5. Default values:
-               - g (gravity): 9.81 m/s^2
-               - angle: 45 degrees (if not specified)
-               - mass: 1.0 kg (if not specified)
-               - drag_coeff: 0.0 (if not mentioned)
+            2. Supported domains: physics.mechanics, mathematics.algebra, mathematics.calculus, mathematics.linear_algebra, mathematics.statistics, mathematics.trigonometry, mathematics.number_theory, mathematics.geometry, mathematics.optimization, mathematics.complex_numbers, mathematics.ode.
+            3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.) or domain-specific units (e.g., "dimensionless", "rad", "deg").
+            4. When unit information is missing, use "dimensionless" as the default unit.
 
-            SCHEMA STRUCTURE (required fields):
+            DOMAIN-SPECIFIC STRUCTURE:
+
+            === physics.mechanics (projectile motion) ===
+            Quantities: v0 (m/s), angle (deg or rad), mass (kg), g (m/s^2), drag_coeff (dimensionless).
+            Equations: d2x/dt2 (ode), d2y/dt2 (ode).
+            solver.timeSpan: required for time-dependent solve.
+            Example:
             {
-              "id": "unique_identifier",
+              "id": "projectile-1",
               "domain": "physics.mechanics",
-              "description": "Human-readable description",
+              "description": "Projectile motion without drag",
               "quantities": [
-                {"name": "v0", "value": <number>, "siUnit": "m/s", "isKnown": true},
-                {"name": "angle", "value": <degrees>, "siUnit": "deg", "isKnown": true},
-                {"name": "mass", "value": <kg>, "siUnit": "kg", "isKnown": true},
+                {"name": "v0", "value": 20.0, "siUnit": "m/s", "isKnown": true},
+                {"name": "angle", "value": 45.0, "siUnit": "deg", "isKnown": true},
+                {"name": "mass", "value": 1.0, "siUnit": "kg", "isKnown": true},
                 {"name": "g", "value": 9.81, "siUnit": "m/s^2", "isKnown": true},
-                {"name": "drag_coeff", "value": <coefficient>, "siUnit": "dimensionless", "isKnown": true}
+                {"name": "drag_coeff", "value": 0.0, "siUnit": "dimensionless", "isKnown": true}
               ],
               "equations": [
-                {
-                  "lhs": "d2x/dt2",
-                  "rhs": "-drag_coeff * vx * sqrt(vx^2 + vy^2) / mass",
-                  "type": "ode",
-                  "description": "Horizontal acceleration with drag"
-                },
-                {
-                  "lhs": "d2y/dt2",
-                  "rhs": "-g - drag_coeff * vy * sqrt(vx^2 + vy^2) / mass",
-                  "type": "ode",
-                  "description": "Vertical acceleration with gravity and drag"
-                }
+                {"lhs": "d2x/dt2", "rhs": "0", "type": "ode"},
+                {"lhs": "d2y/dt2", "rhs": "-g", "type": "ode"}
               ],
-              "initialConditions": {
-                "v0": <number>,
-                "angle": <degrees>,
-                "mass": <kg>,
-                "g": 9.81,
-                "drag_coeff": <coefficient>
-              },
-              "solver": {
-                "method": "RK45",
-                "tolerance": 1e-6,
-                "timeSpan": {"start": 0, "end": 5.0, "numPoints": 5000}
-              },
-              "metadata": {
-                "source": "llm_translator",
-                "originalQuery": "<user's exact query>"
-              }
+              "initialConditions": {},
+              "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0, "end": 5, "numPoints": 1000}}
             }
 
-            VALIDATION RULES:
-            - v0 > 0 (positive velocity)
-            - angle: 0-90 degrees (launching angle, not negative)
-            - mass > 0
-            - g > 0
-            - drag_coeff >= 0
+            === mathematics.algebra ===
+            Solve equations for unknowns (linear, polynomial, or general equations).
+            Quantities: each variable, with known values or isKnown=false for unknowns.
+            Equations: one or more algebraic equations (each lhs and rhs are symbolic expressions).
+            solver.timeSpan: not required.
+            Example: solve x^2 - 5*x + 6 = 0 for x.
+            {
+              "id": "algebra-1",
+              "domain": "mathematics.algebra",
+              "description": "Solve quadratic equation",
+              "quantities": [
+                {"name": "x", "siUnit": "dimensionless", "isKnown": false}
+              ],
+              "equations": [
+                {"lhs": "x**2 - 5*x + 6", "rhs": "0", "type": "algebraic"}
+              ],
+              "initialConditions": {},
+              "solver": {"method": "symbolic_solve", "tolerance": 1e-6}
+            }
 
-            If the query is ambiguous, nonsensical, or outside physics.mechanics, output this JSON error
-            instead of a model:
+            === mathematics.calculus ===
+            Symbolic derivative, integral, or limit of an expression.
+            Quantities: the variable, and any parameters.
+            Equations: the expression (lhs) to differentiate/integrate/take-limit-of, and the variable (rhs).
+            solver.timeSpan: not required.
+            Example: compute derivative of sin(x) w.r.t. x.
+
+            === mathematics.linear_algebra ===
+            Matrix operations: determinant, eigenvalues, solve Ax=b.
+            Quantities: can include vector/matrix values (arrays or nested arrays).
+            Equations: symbolic matrix expressions.
+            solver.timeSpan: not required.
+            Example: solve 2x + 3y = 8; x + y = 3.
+
+            === mathematics.statistics ===
+            Descriptive stats, distributions, hypothesis tests over datasets.
+            Quantities: the dataset (array value), distribution parameters.
+            Equations: stat operation or test name.
+            solver.timeSpan: not required.
+            Example: compute mean and standard deviation of [1, 2, 3, 4, 5].
+
+            === mathematics.trigonometry ===
+            Evaluate or solve trigonometric expressions and identities.
+            Quantities: angles, sides (in appropriate units).
+            Equations: trig equations or law-of-sines/cosines.
+            solver.timeSpan: not required.
+
+            === mathematics.number_theory ===
+            GCD, LCM, prime factorization, permutations (nPr), combinations (nCr).
+            Quantities: integers.
+            Equations: operation or formula (e.g., "gcd(a, b)", "nCr(n, r)").
+            solver.timeSpan: not required.
+
+            === mathematics.geometry ===
+            Area, perimeter, volume, solve for unknown dimensions.
+            Quantities: shape parameters (radius, height, etc.).
+            Equations: area/volume formula or constraint.
+            solver.timeSpan: not required.
+
+            === mathematics.optimization ===
+            Minimize/maximize functions, solve constrained or unconstrained optimization.
+            Quantities: variables and bounds.
+            Equations: objective function and optional constraints.
+            solver.timeSpan: not required.
+
+            === mathematics.complex_numbers ===
+            Arithmetic, modulus, argument, polar/rectangular conversion, roots of complex numbers.
+            Quantities: complex numbers or their components.
+            Equations: operation or formula.
+            solver.timeSpan: not required.
+
+            === mathematics.ode ===
+            Solve general ODEs (not hardcoded physics; arbitrary RHS).
+            Quantities: dependent and independent variables, initial conditions.
+            Equations: ODE(s) in the form "dy/dt" (lhs) = "<expression>" (rhs).
+            solver.timeSpan: required (time bounds for integration).
+            Example: dy/dt = -2*y, y(0) = 1.
+
+            GENERAL VALIDATION RULES:
+            - isKnown must be true exactly when value is present.
+            - For time-dependent problems (ODE, physics.mechanics), provide solver.timeSpan.
+            - Unknown/unsupported domains: output error JSON instead.
+
+            If the query is ambiguous, nonsensical, or outside supported domains, output:
             {
               "error": true,
               "reason": "Explanation of why this query cannot be translated",
@@ -227,7 +293,7 @@ public class ClaudeTranslator {
             throw new JsonParseUnusableException("Claude output did not contain a model");
         }
 
-        if (model.getDomain() == null || !SUPPORTED_DOMAIN.equals(model.getDomain())) {
+        if (model.getDomain() == null || !SUPPORTED_DOMAINS.contains(model.getDomain())) {
             throw new UnsupportedDomainException(model.getDomain());
         }
 

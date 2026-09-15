@@ -1,0 +1,572 @@
+{
+  "info": {
+    "name": "Clauneck Complete Flow",
+    "description": "End-to-end testing for the clauneck scientific prototyping platform. Tests the complete translator → engine flow plus error cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Health Check - Web",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{web_url}}/actuator/health",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Verify Spring Boot web module is running"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check - Engine",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{engine_url}}/health",
+              "host": [
+                "{{engine_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Verify Python FastAPI engine is running"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Happy Path - Projectile Motion",
+      "item": [
+        {
+          "name": "1. Simple Projectile - 45° Launch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has model and result', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('model');",
+                  "    pm.expect(jsonData).to.have.property('result');",
+                  "    pm.expect(jsonData).to.have.property('message').eql('OK');",
+                  "});",
+                  "",
+                  "pm.test('Model has required fields', function () {",
+                  "    var model = pm.response.json().model;",
+                  "    pm.expect(model).to.have.property('domain').eql('physics.mechanics');",
+                  "    pm.expect(model).to.have.property('quantities');",
+                  "    pm.expect(model).to.have.property('equations');",
+                  "    pm.expect(model).to.have.property('initialConditions');",
+                  "});",
+                  "",
+                  "pm.test('Result is successful with trajectory', function () {",
+                  "    var result = pm.response.json().result;",
+                  "    pm.expect(result).to.have.property('success').eql(true);",
+                  "    pm.expect(result).to.have.property('trajectory');",
+                  "    pm.expect(result.trajectory).to.have.property('time');",
+                  "    pm.expect(result.trajectory).to.have.property('x');",
+                  "    pm.expect(result.trajectory).to.have.property('y');",
+                  "});",
+                  "",
+                  "pm.test('Trajectory has data points', function () {",
+                  "    var trajectory = pm.response.json().result.trajectory;",
+                  "    pm.expect(trajectory.time.length).to.be.greaterThan(0);",
+                  "    pm.expect(trajectory.x.length).to.equal(trajectory.time.length);",
+                  "    pm.expect(trajectory.y.length).to.equal(trajectory.time.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"A projectile is launched at 45 degrees with initial velocity 20 m/s. How far does it travel horizontally?\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Complete flow: translate natural language → validate → solve projectile motion"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Projectile with 30° Angle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Ball launched at 30 degrees, initial speed 15 m/s, from height 2 meters. Find maximum height and range.\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Vertical Launch (90°)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Object thrown straight up with initial velocity 25 m/s. How long until it returns to ground level?\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Cases - Input Validation",
+      "item": [
+        {
+          "name": "Empty Query",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error response has correct structure', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('code').eql('TRANSLATION_FAILED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('details');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Should return 400: Query must not be empty"
+          },
+          "response": []
+        },
+        {
+          "name": "Query Too Long (>1000 chars)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message mentions character limit', function () {",
+                  "    var response = pm.response.text();",
+                  "    pm.expect(response).to.include('1000');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"A projectile is launched with a very long and completely unnecessary description that goes on and on and on and never stops and keeps adding more and more irrelevant details about the projectile motion problem that we are trying to solve. The projectile is launched at an angle and we want to know many things about its motion including the trajectory the maximum height the range the time of flight and many other parameters. We also need to consider air resistance and drag forces and the rotation of the projectile and relativistic effects even though they don't matter for this problem. Additionally we should consider the curvature of the earth and gravitational variations and quantum mechanical uncertainty principles which are completely absurd for this macroscopic classical mechanics problem. Furthermore we want to add even more unnecessary constraints and boundary conditions that make no physical sense whatsoever. This query is intentionally designed to exceed the maximum allowed length of 1000 characters to test the input validation logic of the system.\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Should return 400: Query exceeds 1000 characters"
+          },
+          "response": []
+        },
+        {
+          "name": "Null Query",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": null\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Should return 400: Query must not be empty"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Cases - Domain & Translation",
+      "item": [
+        {
+          "name": "Unsupported Domain (Chemistry)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 501 Not Implemented', function () {",
+                  "    pm.response.to.have.status(501);",
+                  "});",
+                  "",
+                  "pm.test('Error code is DOMAIN_NOT_SUPPORTED', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('code').eql('DOMAIN_NOT_SUPPORTED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"What is the reaction rate for the Michaelis-Menten enzyme kinetics with Km = 5 mM and Vmax = 100 μM/s?\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Should return 501: Domain chemistry.kinetics not yet supported"
+          },
+          "response": []
+        },
+        {
+          "name": "Ambiguous Query (Translation may fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Something goes up and down. How much?\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "May return 400: TRANSLATION_FAILED if Claude cannot extract model from query"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Cases - Service Unavailable",
+      "item": [
+        {
+          "name": "Engine Down (Wrong Port)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 502 Bad Gateway', function () {",
+                  "    pm.response.to.have.status(502);",
+                  "});",
+                  "",
+                  "pm.test('Error code is ENGINE_UNAVAILABLE', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('code').eql('ENGINE_UNAVAILABLE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Ball launched at 45 degrees with 20 m/s initial velocity.\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Simulates engine being unavailable (set CLAUNECK_ENGINE_URL to wrong port). Should return 502."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing ANTHROPIC_API_KEY",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 503 Service Unavailable', function () {",
+                  "    pm.response.to.have.status(503);",
+                  "});",
+                  "",
+                  "pm.test('Error code is SERVICE_UNAVAILABLE', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('code').eql('SERVICE_UNAVAILABLE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Ball launched at 45 degrees with 20 m/s initial velocity.\"\n}"
+            },
+            "url": {
+              "raw": "{{web_url}}/api/prototype",
+              "host": [
+                "{{web_url}}"
+              ],
+              "path": [
+                "api",
+                "prototype"
+              ]
+            },
+            "description": "Requires ANTHROPIC_API_KEY env var not set. Should return 503."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Direct Engine Testing",
+      "item": [
+        {
+          "name": "Engine Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{engine_url}}/health",
+              "host": [
+                "{{engine_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check if Python FastAPI engine is ready"
+          },
+          "response": []
+        },
+        {
+          "name": "Direct Engine Solve (Raw Model)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Result has success and trajectory', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success').eql(true);",
+                  "    pm.expect(jsonData).to.have.property('trajectory');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"physics.mechanics\",\n  \"description\": \"Direct engine test: 45° projectile\",\n  \"quantities\": [\n    {\n      \"name\": \"v0\",\n      \"description\": \"Initial velocity\",\n      \"value\": 20.0,\n      \"siUnit\": \"m/s\",\n      \"isKnown\": true,\n      \"dimensionVector\": {\n        \"length\": 1,\n        \"time\": -1\n      }\n    },\n    {\n      \"name\": \"theta\",\n      \"description\": \"Launch angle\",\n      \"value\": 45.0,\n      \"siUnit\": \"deg\",\n      \"isKnown\": true,\n      \"dimensionVector\": {}\n    },\n    {\n      \"name\": \"g\",\n      \"description\": \"Gravitational acceleration\",\n      \"value\": 9.81,\n      \"siUnit\": \"m/s^2\",\n      \"isKnown\": true,\n      \"dimensionVector\": {\n        \"length\": 1,\n        \"time\": -2\n      }\n    },\n    {\n      \"name\": \"x\",\n      \"description\": \"Horizontal distance\",\n      \"isKnown\": false,\n      \"dimensionVector\": {\n        \"length\": 1\n      }\n    },\n    {\n      \"name\": \"y\",\n      \"description\": \"Vertical height\",\n      \"isKnown\": false,\n      \"dimensionVector\": {\n        \"length\": 1\n      }\n    }\n  ],\n  \"equations\": [\n    {\n      \"lhs\": \"x\",\n      \"rhs\": \"v0 * cos(theta * pi / 180) * t\",\n      \"type\": \"algebraic\",\n      \"description\": \"Horizontal position\"\n    },\n    {\n      \"lhs\": \"y\",\n      \"rhs\": \"v0 * sin(theta * pi / 180) * t - 0.5 * g * t**2\",\n      \"type\": \"algebraic\",\n      \"description\": \"Vertical position\"\n    }\n  ],\n  \"initialConditions\": {\n    \"t\": 0.0,\n    \"x\": 0.0,\n    \"y\": 0.0\n  },\n  \"solver\": {\n    \"method\": \"RK45\",\n    \"tolerance\": 1e-6,\n    \"timeSpan\": {\n      \"start\": 0.0,\n      \"end\": 3.0,\n      \"numPoints\": 100\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{engine_url}}/api/solve",
+              "host": [
+                "{{engine_url}}"
+              ],
+              "path": [
+                "api",
+                "solve"
+              ]
+            },
+            "description": "Bypass translator; send complete model directly to Python solver. Validates engine independently."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "web_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "engine_url",
+      "value": "http://localhost:8001",
+      "type": "string"
+    }
+  ]
+}

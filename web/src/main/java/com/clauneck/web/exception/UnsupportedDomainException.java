@@ -1,15 +1,17 @@
 package com.clauneck.web.exception;
 
 /**
- * The translated model's domain isn't physics.mechanics. Maps to HTTP 501
- * per spec.md FR5 ("other domains return 501").
+ * The translated model's domain is not in the supported set. Maps to HTTP 501.
  */
 public class UnsupportedDomainException extends RuntimeException {
 
     private final String domain;
 
     public UnsupportedDomainException(String domain) {
-        super("Domain '" + domain + "' is not supported; only physics.mechanics is implemented");
+        super("Domain '" + domain + "' is not supported. Supported domains: physics.mechanics, " +
+              "mathematics.algebra, mathematics.calculus, mathematics.linear_algebra, " +
+              "mathematics.statistics, mathematics.trigonometry, mathematics.number_theory, " +
+              "mathematics.geometry, mathematics.optimization, mathematics.complex_numbers, mathematics.ode");
         this.domain = domain;
     }
 
