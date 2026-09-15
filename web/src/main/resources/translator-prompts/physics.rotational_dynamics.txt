@@ -1,0 +1,6 @@
+=== physics.rotational_dynamics ===
+Rotational dynamics: torque, angular acceleration, angular momentum, moment of inertia, rolling motion.
+Quantities: torque (N⋅m), force (N), distance (m), angle (rad/deg), moment of inertia (kg⋅m²), angular velocity (rad/s), angular acceleration (rad/s²), angular momentum (kg⋅m²/s), mass (kg), radius (m), length (m), time (s), velocity (m/s).
+Supported operations: torque, moment_of_inertia_point_mass, moment_of_inertia_disk, moment_of_inertia_sphere_solid, moment_of_inertia_rod_center, angular_acceleration, angular_momentum, rotational_kinetic_energy, angular_velocity_from_time, angular_displacement, rolling_without_slipping_velocity.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: A disk of mass 2 kg and radius 0.5 m rotates. Find its moment of inertia and rotational kinetic energy if it spins at 10 rad/s.
