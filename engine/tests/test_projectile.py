@@ -145,6 +145,24 @@ def test_projectile_no_drag_range(projectile_model):
         f"Range {actual_range} far from expected {expected_range}"
 
 
+def test_impact_summary_uses_event_at_coarse_output_resolution(projectile_model):
+    """Impact time/range come from event interpolation, not the last grid sample."""
+    coarse_solver = projectile_model.solver.model_copy(update={
+        "timeSpan": TimeSpan(start=0, end=5, numPoints=6),
+    })
+    model = projectile_model.model_copy(update={"solver": coarse_solver})
+
+    result = ProjectileMotionSolver().solve(model)
+
+    expected_time = 2 * 20 * np.sin(np.pi / 4) / 9.81
+    expected_range = 20 * np.cos(np.pi / 4) * expected_time
+    assert result.success
+    assert len(result.trajectory["t"]) == 3
+    assert result.trajectory["t"] == [0.0, 1.0, 2.0]
+    assert result.summary["flight_time"] == pytest.approx(expected_time, abs=1e-5)
+    assert result.summary["max_range"] == pytest.approx(expected_range, abs=1e-4)
+
+
 def test_projectile_with_drag_solvable(projectile_with_drag):
     """Test that projectile motion with drag solves successfully."""
     solver = ProjectileMotionSolver()

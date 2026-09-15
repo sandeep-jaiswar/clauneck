@@ -80,16 +80,16 @@
                   "    var result = pm.response.json().result;",
                   "    pm.expect(result).to.have.property('success').eql(true);",
                   "    pm.expect(result).to.have.property('trajectory');",
-                  "    pm.expect(result.trajectory).to.have.property('time');",
+                  "    pm.expect(result.trajectory).to.have.property('t');",
                   "    pm.expect(result.trajectory).to.have.property('x');",
                   "    pm.expect(result.trajectory).to.have.property('y');",
                   "});",
                   "",
                   "pm.test('Trajectory has data points', function () {",
                   "    var trajectory = pm.response.json().result.trajectory;",
-                  "    pm.expect(trajectory.time.length).to.be.greaterThan(0);",
-                  "    pm.expect(trajectory.x.length).to.equal(trajectory.time.length);",
-                  "    pm.expect(trajectory.y.length).to.equal(trajectory.time.length);",
+                  "    pm.expect(trajectory.t.length).to.be.greaterThan(0);",
+                  "    pm.expect(trajectory.x.length).to.equal(trajectory.t.length);",
+                  "    pm.expect(trajectory.y.length).to.equal(trajectory.t.length);",
                   "});"
                 ]
               }
@@ -193,7 +193,7 @@
                   "",
                   "pm.test('Error response has correct structure', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('code').eql('TRANSLATION_FAILED');",
+                  "    pm.expect(jsonData).to.have.property('error').eql('TRANSLATION_FAILED');",
                   "    pm.expect(jsonData).to.have.property('message');",
                   "    pm.expect(jsonData).to.have.property('details');",
                   "});"
@@ -330,7 +330,7 @@
                   "",
                   "pm.test('Error code is DOMAIN_NOT_SUPPORTED', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('code').eql('DOMAIN_NOT_SUPPORTED');",
+                  "    pm.expect(jsonData).to.have.property('error').eql('DOMAIN_NOT_SUPPORTED');",
                   "});"
                 ]
               }
@@ -393,10 +393,22 @@
       ]
     },
     {
-      "name": "Error Cases - Service Unavailable",
+      "name": "Manual Infrastructure-State Cases (disabled)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "if (pm.environment.get('run_manual_infrastructure_cases') !== 'true') {",
+              "    pm.execution.skipRequest();",
+              "}"
+            ]
+          }
+        }
+      ],
       "item": [
         {
-          "name": "Engine Down (Wrong Port)",
+          "name": "Engine Down (Wrong Port) [manual]",
           "event": [
             {
               "listen": "test",
@@ -408,7 +420,7 @@
                   "",
                   "pm.test('Error code is ENGINE_UNAVAILABLE', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('code').eql('ENGINE_UNAVAILABLE');",
+                  "    pm.expect(jsonData).to.have.property('error').eql('ENGINE_UNAVAILABLE');",
                   "});"
                 ]
               }
@@ -441,7 +453,7 @@
           "response": []
         },
         {
-          "name": "Missing ANTHROPIC_API_KEY",
+          "name": "Missing ANTHROPIC_API_KEY [manual]",
           "event": [
             {
               "listen": "test",
@@ -453,7 +465,7 @@
                   "",
                   "pm.test('Error code is SERVICE_UNAVAILABLE', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('code').eql('SERVICE_UNAVAILABLE');",
+                  "    pm.expect(jsonData).to.have.property('error').eql('SERVICE_UNAVAILABLE');",
                   "});"
                 ]
               }
@@ -521,8 +533,8 @@
                   "",
                   "pm.test('Result has success and trajectory', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('success').eql(true);",
-                  "    pm.expect(jsonData).to.have.property('trajectory');",
+                  "    pm.expect(jsonData.result).to.have.property('success').eql(true);",
+                  "    pm.expect(jsonData.result).to.have.property('trajectory');",
                   "});"
                 ]
               }
@@ -538,7 +550,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"domain\": \"physics.mechanics\",\n  \"description\": \"Direct engine test: 45° projectile\",\n  \"quantities\": [\n    {\n      \"name\": \"v0\",\n      \"description\": \"Initial velocity\",\n      \"value\": 20.0,\n      \"siUnit\": \"m/s\",\n      \"isKnown\": true,\n      \"dimensionVector\": {\n        \"length\": 1,\n        \"time\": -1\n      }\n    },\n    {\n      \"name\": \"theta\",\n      \"description\": \"Launch angle\",\n      \"value\": 45.0,\n      \"siUnit\": \"deg\",\n      \"isKnown\": true,\n      \"dimensionVector\": {}\n    },\n    {\n      \"name\": \"g\",\n      \"description\": \"Gravitational acceleration\",\n      \"value\": 9.81,\n      \"siUnit\": \"m/s^2\",\n      \"isKnown\": true,\n      \"dimensionVector\": {\n        \"length\": 1,\n        \"time\": -2\n      }\n    },\n    {\n      \"name\": \"x\",\n      \"description\": \"Horizontal distance\",\n      \"isKnown\": false,\n      \"dimensionVector\": {\n        \"length\": 1\n      }\n    },\n    {\n      \"name\": \"y\",\n      \"description\": \"Vertical height\",\n      \"isKnown\": false,\n      \"dimensionVector\": {\n        \"length\": 1\n      }\n    }\n  ],\n  \"equations\": [\n    {\n      \"lhs\": \"x\",\n      \"rhs\": \"v0 * cos(theta * pi / 180) * t\",\n      \"type\": \"algebraic\",\n      \"description\": \"Horizontal position\"\n    },\n    {\n      \"lhs\": \"y\",\n      \"rhs\": \"v0 * sin(theta * pi / 180) * t - 0.5 * g * t**2\",\n      \"type\": \"algebraic\",\n      \"description\": \"Vertical position\"\n    }\n  ],\n  \"initialConditions\": {\n    \"t\": 0.0,\n    \"x\": 0.0,\n    \"y\": 0.0\n  },\n  \"solver\": {\n    \"method\": \"RK45\",\n    \"tolerance\": 1e-6,\n    \"timeSpan\": {\n      \"start\": 0.0,\n      \"end\": 3.0,\n      \"numPoints\": 100\n    }\n  }\n}"
+              "raw": "{\n  \"id\": \"direct-projectile-1\",\n  \"domain\": \"physics.mechanics\",\n  \"description\": \"Direct engine test: 45° projectile\",\n  \"quantities\": [\n    {\"name\": \"v0\", \"value\": 20.0, \"siUnit\": \"m/s\", \"isKnown\": true},\n    {\"name\": \"angle\", \"value\": 45.0, \"siUnit\": \"deg\", \"isKnown\": true},\n    {\"name\": \"mass\", \"value\": 1.0, \"siUnit\": \"kg\", \"isKnown\": true},\n    {\"name\": \"g\", \"value\": 9.81, \"siUnit\": \"m/s^2\", \"isKnown\": true}\n  ],\n  \"equations\": [\n    {\"lhs\": \"d2x/dt2\", \"rhs\": \"0\", \"type\": \"ode\"},\n    {\"lhs\": \"d2y/dt2\", \"rhs\": \"-g\", \"type\": \"ode\"}\n  ],\n  \"initialConditions\": {},\n  \"solver\": {\"method\": \"RK45\", \"tolerance\": 1e-6, \"timeSpan\": {\"start\": 0.0, \"end\": 5.0, \"numPoints\": 100}}\n}"
             },
             "url": {
               "raw": "{{engine_url}}/api/solve",

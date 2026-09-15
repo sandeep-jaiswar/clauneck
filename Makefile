@@ -60,15 +60,22 @@ run: engine-run-bg
 engine-run-bg:
 	@echo "Starting Python engine (background)..."
 	cd engine && python3 -m venv .venv 2>/dev/null || true
-	cd engine && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 > /tmp/engine.log 2>&1 &
+	@mkdir -p .clauneck/run
+	@cd engine; .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 > /tmp/engine.log 2>&1 & echo $$! > ../.clauneck/run/engine.pid
 	@sleep 1
-	@echo "✓ Engine started (PID logged)"
+	@echo "✓ Engine started (PID stored in .clauneck/run/engine.pid)"
 
 # Stop targets
 stop:
 	@echo "Stopping all services..."
-	@pkill -f "uvicorn app.main:app" 2>/dev/null || echo "  Engine not running"
-	@pkill -f "gradle.*bootRun\|java.*springframework" 2>/dev/null || echo "  Web server not running"
+	@if test -f .clauneck/run/engine.pid && kill -0 "$$(cat .clauneck/run/engine.pid)" 2>/dev/null; then \
+		kill "$$(cat .clauneck/run/engine.pid)" && echo "  Engine stopped"; \
+	else echo "  Engine not running"; fi
+	@rm -f .clauneck/run/engine.pid
+	@if test -f .clauneck/run/web.pid && kill -0 "$$(cat .clauneck/run/web.pid)" 2>/dev/null; then \
+		kill "$$(cat .clauneck/run/web.pid)" && echo "  Web server stopped"; \
+	else echo "  Web server not running"; fi
+	@rm -f .clauneck/run/web.pid
 	@sleep 1
 	@echo "✓ All services stopped"
 

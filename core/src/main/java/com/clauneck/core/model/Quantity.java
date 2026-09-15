@@ -3,6 +3,7 @@ package com.clauneck.core.model;
 import com.clauneck.core.units.Dimension;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ import java.util.Optional;
  */
 public class Quantity {
   private final String name;
-  private final Optional<Double> value;
+  private final Optional<Object> value;
   private final String siUnit;
   private final Dimension dimension;
   private final boolean isKnown;
@@ -20,7 +21,7 @@ public class Quantity {
   @JsonCreator
   public Quantity(
       @JsonProperty(value = "name", required = true) String name,
-      @JsonProperty("value") Optional<Double> value,
+      @JsonProperty("value") Optional<Object> value,
       @JsonProperty(value = "siUnit", required = true) String siUnit,
       @JsonProperty("dimensionVector") Dimension dimension,
       @JsonProperty(value = "isKnown", required = true) boolean isKnown,
@@ -42,7 +43,7 @@ public class Quantity {
 
   public static class Builder {
     private final String name;
-    private Optional<Double> value = Optional.empty();
+    private Optional<Object> value = Optional.empty();
     private String siUnit = "dimensionless";
     private Dimension dimension = Dimension.DIMENSIONLESS;
     private boolean isKnown = false;
@@ -54,6 +55,12 @@ public class Quantity {
 
     public Builder value(double v) {
       this.value = Optional.of(v);
+      this.isKnown = true;
+      return this;
+    }
+
+    public Builder value(List<?> values) {
+      this.value = Optional.of(List.copyOf(values));
       this.isKnown = true;
       return this;
     }
@@ -85,7 +92,7 @@ public class Quantity {
   }
 
   public String getName() { return name; }
-  public Optional<Double> getValue() { return value; }
+  public Optional<Object> getValue() { return value; }
   public String getSiUnit() { return siUnit; }
   @JsonProperty("dimensionVector")
   public Dimension getDimension() { return dimension; }

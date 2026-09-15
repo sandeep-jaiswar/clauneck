@@ -543,5 +543,57 @@ def test_general_solver_routes_statistics_ttest(ttest_model):
     assert "t_statistic" in result.summary
 
 
+def test_operation_parser_rejects_trailing_expression(descriptive_stats_model):
+    equation = descriptive_stats_model.equations[0].model_copy(
+        update={"rhs": "mean(data) + 1"})
+    model = descriptive_stats_model.model_copy(update={"equations": [equation]})
+
+    result = StatisticalAnalysisSolver().solve(model)
+
+    assert not result.success
+    assert "Invalid operation format" in result.error
+
+
+@pytest.mark.parametrize(
+    ("operation", "quantities", "expected_error"),
+    [
+        ("normal_pdf(x, mu, sigma)", {"x": 0, "mu": 0, "sigma": 0}, "sigma"),
+        ("normal_quantile(p, mu, sigma)", {"p": 1, "mu": 0, "sigma": 1}, "p"),
+        ("binomial_pdf(k, n, p)", {"k": 1.5, "n": 5, "p": 0.5}, "k"),
+        ("binomial_cdf(k, n, p)", {"k": 2, "n": 5.5, "p": 0.5}, "n"),
+        ("binomial_pdf(k, n, p)", {"k": 2, "n": 5, "p": 1.5}, "p"),
+        ("poisson_pdf(k, lam)", {"k": 2, "lam": 0}, "lambda"),
+        ("poisson_cdf(k, lam)", {"k": float("inf"), "lam": 2}, "finite"),
+    ],
+)
+def test_distribution_parameters_are_validated(
+        descriptive_stats_model, operation, quantities, expected_error):
+    model_quantities = [
+        Quantity(name=name, value=value, siUnit="dimensionless", isKnown=True)
+        for name, value in quantities.items()
+    ]
+    equation = descriptive_stats_model.equations[0].model_copy(update={"rhs": operation})
+    model = descriptive_stats_model.model_copy(update={
+        "quantities": model_quantities,
+        "equations": [equation],
+    })
+
+    result = StatisticalAnalysisSolver().solve(model)
+
+    assert not result.success
+    assert expected_error in result.error
+
+
+def test_descriptive_statistics_reject_non_finite_data(descriptive_stats_model):
+    quantity = descriptive_stats_model.quantities[0].model_copy(
+        update={"value": [1.0, float("nan")]})
+    model = descriptive_stats_model.model_copy(update={"quantities": [quantity]})
+
+    result = StatisticalAnalysisSolver().solve(model)
+
+    assert not result.success
+    assert "finite" in result.error
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

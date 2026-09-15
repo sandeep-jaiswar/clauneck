@@ -8,7 +8,7 @@ public class Quantity {
 
     private String name;
     private String description;
-    private Double value;
+    private Object value;
     private String siUnit;
     private DimensionVector dimensionVector;
 
@@ -34,11 +34,11 @@ public class Quantity {
         this.description = description;
     }
 
-    public Double getValue() {
+    public Object getValue() {
         return value;
     }
 
-    public void setValue(Double value) {
+    public void setValue(Object value) {
         this.value = value;
     }
 

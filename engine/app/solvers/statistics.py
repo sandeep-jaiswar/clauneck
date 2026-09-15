@@ -77,7 +77,7 @@ class StatisticalAnalysisSolver(SolverBase):
         Returns a dict with success flag and results.
         """
         # Parse function call pattern: func_name(arg1, arg2, ...)
-        match = re.match(r'(\w+)\((.*)\)', operation_str)
+        match = re.fullmatch(r'([A-Za-z_]\w*)\((.*)\)', operation_str)
         if not match:
             return {"success": False, "error": f"Invalid operation format: {operation_str}"}
 
@@ -85,7 +85,7 @@ class StatisticalAnalysisSolver(SolverBase):
         args_str = match.group(2).strip()
 
         # Parse arguments
-        args = [arg.strip() for arg in args_str.split(',')]
+        args = [] if not args_str else [arg.strip() for arg in args_str.split(',')]
 
         # Resolve arguments (quantity names to values)
         resolved_args = []
@@ -152,25 +152,50 @@ class StatisticalAnalysisSolver(SolverBase):
 
     # Descriptive statistics operations
 
+    def _finite_array(self, value, name: str) -> np.ndarray:
+        """Return a non-empty finite numeric array or raise a clear error."""
+        data = np.asarray(value, dtype=float)
+        if data.size == 0:
+            raise ValueError(f"{name} must not be empty")
+        if not np.all(np.isfinite(data)):
+            raise ValueError(f"{name} must contain only finite values")
+        return data
+
+    def _finite_scalar(self, value, name: str) -> float:
+        """Return a finite scalar or raise a clear error."""
+        data = np.asarray(value, dtype=float)
+        if data.ndim != 0:
+            raise ValueError(f"{name} must be a scalar")
+        result = float(data)
+        if not np.isfinite(result):
+            raise ValueError(f"{name} must be finite")
+        return result
+
+    def _integer(self, value, name: str, minimum: int = 0) -> int:
+        result = self._finite_scalar(value, name)
+        if not result.is_integer() or result < minimum:
+            raise ValueError(f"{name} must be an integer greater than or equal to {minimum}")
+        return int(result)
+
     def _stat_mean(self, args: List) -> dict:
         """Compute mean of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "mean() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         return {"success": True, "mean": float(np.mean(data))}
 
     def _stat_median(self, args: List) -> dict:
         """Compute median of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "median() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         return {"success": True, "median": float(np.median(data))}
 
     def _stat_mode(self, args: List) -> dict:
         """Compute mode of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "mode() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         mode_result = stats.mode(data, keepdims=True)
         return {"success": True, "mode": float(mode_result.mode[0])}
 
@@ -178,21 +203,21 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute variance of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "variance() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         return {"success": True, "variance": float(np.var(data))}
 
     def _stat_stdev(self, args: List) -> dict:
         """Compute standard deviation of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "stdev() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         return {"success": True, "stdev": float(np.std(data))}
 
     def _stat_quartiles(self, args: List) -> dict:
         """Compute quartiles (Q1, Q2/median, Q3) of a dataset."""
         if len(args) != 1:
             return {"success": False, "error": "quartiles() requires exactly 1 argument"}
-        data = np.array(args[0])
+        data = self._finite_array(args[0], "data")
         q1 = float(np.percentile(data, 25))
         q2 = float(np.percentile(data, 50))
         q3 = float(np.percentile(data, 75))
@@ -209,7 +234,11 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute PDF of normal distribution at x with mean mu and std sigma."""
         if len(args) != 3:
             return {"success": False, "error": "normal_pdf() requires exactly 3 arguments: x, mu, sigma"}
-        x, mu, sigma = args
+        x = self._finite_scalar(args[0], "x")
+        mu = self._finite_scalar(args[1], "mu")
+        sigma = self._finite_scalar(args[2], "sigma")
+        if sigma <= 0:
+            raise ValueError("sigma must be greater than 0")
         pdf_value = float(stats.norm.pdf(x, loc=mu, scale=sigma))
         return {"success": True, "pdf": pdf_value}
 
@@ -217,7 +246,11 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute CDF of normal distribution at x with mean mu and std sigma."""
         if len(args) != 3:
             return {"success": False, "error": "normal_cdf() requires exactly 3 arguments: x, mu, sigma"}
-        x, mu, sigma = args
+        x = self._finite_scalar(args[0], "x")
+        mu = self._finite_scalar(args[1], "mu")
+        sigma = self._finite_scalar(args[2], "sigma")
+        if sigma <= 0:
+            raise ValueError("sigma must be greater than 0")
         cdf_value = float(stats.norm.cdf(x, loc=mu, scale=sigma))
         return {"success": True, "cdf": cdf_value}
 
@@ -225,7 +258,13 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute quantile of normal distribution at probability p with mean mu and std sigma."""
         if len(args) != 3:
             return {"success": False, "error": "normal_quantile() requires exactly 3 arguments: p, mu, sigma"}
-        p, mu, sigma = args
+        p = self._finite_scalar(args[0], "p")
+        mu = self._finite_scalar(args[1], "mu")
+        sigma = self._finite_scalar(args[2], "sigma")
+        if not 0 < p < 1:
+            raise ValueError("p must be greater than 0 and less than 1")
+        if sigma <= 0:
+            raise ValueError("sigma must be greater than 0")
         q_value = float(stats.norm.ppf(p, loc=mu, scale=sigma))
         return {"success": True, "quantile": q_value}
 
@@ -233,23 +272,38 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute PDF of binomial distribution: P(X=k) with n trials and p probability."""
         if len(args) != 3:
             return {"success": False, "error": "binomial_pdf() requires exactly 3 arguments: k, n, p"}
-        k, n, p = args
-        pdf_value = float(stats.binom.pmf(k, int(n), p))
+        k = self._integer(args[0], "k")
+        n = self._integer(args[1], "n")
+        p = self._finite_scalar(args[2], "p")
+        if k > n:
+            raise ValueError("k must be less than or equal to n")
+        if not 0 <= p <= 1:
+            raise ValueError("p must be between 0 and 1")
+        pdf_value = float(stats.binom.pmf(k, n, p))
         return {"success": True, "pmf": pdf_value}
 
     def _dist_binomial_cdf(self, args: List) -> dict:
         """Compute CDF of binomial distribution: P(X<=k) with n trials and p probability."""
         if len(args) != 3:
             return {"success": False, "error": "binomial_cdf() requires exactly 3 arguments: k, n, p"}
-        k, n, p = args
-        cdf_value = float(stats.binom.cdf(k, int(n), p))
+        k = self._integer(args[0], "k")
+        n = self._integer(args[1], "n")
+        p = self._finite_scalar(args[2], "p")
+        if k > n:
+            raise ValueError("k must be less than or equal to n")
+        if not 0 <= p <= 1:
+            raise ValueError("p must be between 0 and 1")
+        cdf_value = float(stats.binom.cdf(k, n, p))
         return {"success": True, "cdf": cdf_value}
 
     def _dist_poisson_pdf(self, args: List) -> dict:
         """Compute PDF of Poisson distribution: P(X=k) with rate lambda."""
         if len(args) != 2:
             return {"success": False, "error": "poisson_pdf() requires exactly 2 arguments: k, lambda"}
-        k, lam = args
+        k = self._integer(args[0], "k")
+        lam = self._finite_scalar(args[1], "lambda")
+        if lam <= 0:
+            raise ValueError("lambda must be greater than 0")
         pdf_value = float(stats.poisson.pmf(k, lam))
         return {"success": True, "pmf": pdf_value}
 
@@ -257,7 +311,10 @@ class StatisticalAnalysisSolver(SolverBase):
         """Compute CDF of Poisson distribution: P(X<=k) with rate lambda."""
         if len(args) != 2:
             return {"success": False, "error": "poisson_cdf() requires exactly 2 arguments: k, lambda"}
-        k, lam = args
+        k = self._integer(args[0], "k")
+        lam = self._finite_scalar(args[1], "lambda")
+        if lam <= 0:
+            raise ValueError("lambda must be greater than 0")
         cdf_value = float(stats.poisson.cdf(k, lam))
         return {"success": True, "cdf": cdf_value}
 
@@ -270,8 +327,10 @@ class StatisticalAnalysisSolver(SolverBase):
         """
         if len(args) != 2:
             return {"success": False, "error": "ttest_1samp() requires exactly 2 arguments: data, null_hypothesis"}
-        data, null_hyp = args
-        data = np.array(data)
+        data = self._finite_array(args[0], "data")
+        null_hyp = self._finite_scalar(args[1], "null_hypothesis")
+        if data.size < 2:
+            raise ValueError("data must contain at least 2 values")
         t_stat, p_value = stats.ttest_1samp(data, null_hyp)
         return {
             "success": True,
@@ -287,9 +346,12 @@ class StatisticalAnalysisSolver(SolverBase):
         """
         if len(args) != 2:
             return {"success": False, "error": "chi2_gof() requires exactly 2 arguments: observed, expected"}
-        observed, expected = args
-        observed = np.array(observed)
-        expected = np.array(expected)
+        observed = self._finite_array(args[0], "observed")
+        expected = self._finite_array(args[1], "expected")
+        if observed.ndim != 1 or expected.ndim != 1 or observed.shape != expected.shape:
+            raise ValueError("observed and expected must be one-dimensional arrays of equal length")
+        if np.any(observed < 0) or np.any(expected <= 0):
+            raise ValueError("observed must be non-negative and expected must be greater than 0")
         chi2_stat, p_value = stats.chisquare(observed, expected)
         return {
             "success": True,
