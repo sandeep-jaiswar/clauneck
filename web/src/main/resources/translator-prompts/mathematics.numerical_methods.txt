@@ -1,0 +1,28 @@
+=== mathematics.numerical_methods ===
+Root-finding, interpolation, numerical differentiation/integration, and ODE solving.
+Quantities: target values, interval bounds, data points for interpolation, step sizes, tolerances.
+Equations: put exactly one supported operation call in rhs, such as newton_raphson(f_code, df_code, x0),
+bisection_method(f_code, a, b), lagrange_interpolation(x_data, y_data, x), or rk45_step(f_code, y, t, dt).
+Supported operations: newton_raphson, bisection_method, secant_method, brent_method,
+lagrange_interpolation, newton_interpolation, cubic_spline, finite_difference_1st_order,
+finite_difference_2nd_order, richardson_extrapolation, trapezoidal_integration, simpsons_rule,
+gauss_legendre_integration, rk45_step, bdf_step, ode_adaptive_step, solve_stiff_system.
+solver.timeSpan: not required.
+Example:
+{
+  "id": "nm-newton-root",
+  "domain": "mathematics.numerical_methods",
+  "description": "Find root of cos(x) - x using Newton-Raphson",
+  "quantities": [
+    {"name": "f_code", "value": "cos(x) - x", "siUnit": "dimensionless", "isKnown": true},
+    {"name": "df_code", "value": "-sin(x) - 1", "siUnit": "dimensionless", "isKnown": true},
+    {"name": "x0", "value": 0.5, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "max_iter", "value": 100, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "tolerance", "value": 1e-6, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "root", "rhs": "newton_raphson(f_code, df_code, x0, max_iter, tolerance)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
