@@ -94,7 +94,7 @@ class SolverResult(BaseModel):
     success: bool
     message: str
     trajectory: Optional[Dict[str, List[float]]] = None
-    summary: Optional[Dict[str, float]] = None
+    summary: Optional[Dict[str, Union[float, str, Dict, List]]] = None
     error: Optional[str] = None
 
 
