@@ -1,0 +1,6 @@
+=== chemistry.equilibrium ===
+Chemical equilibrium: reaction quotient Q, equilibrium constant K, Le Chatelier predictions.
+Quantities: concentrations (mol/L), stoichiometric coefficients, K_eq, Q, temperature.
+Supported operations: reaction_quotient, kp_from_kc, le_chatelier_direction, percent_dissociation.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate reaction quotient Q for aA + bB ⇌ cC + dD with current concentrations.

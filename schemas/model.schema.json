@@ -12,6 +12,11 @@
     "domain": {
       "type": "string",
       "enum": [
+        "chemistry.acid_base_equilibrium",
+        "chemistry.equilibrium",
+        "chemistry.kinetics",
+        "chemistry.redox_reactions",
+        "chemistry.thermochemistry",
         "mathematics.algebra",
         "mathematics.calculus",
         "mathematics.complex_numbers",
@@ -22,7 +27,12 @@
         "mathematics.optimization",
         "mathematics.statistics",
         "mathematics.trigonometry",
-        "physics.mechanics"
+        "physics.collisions",
+        "physics.electromagnetism",
+        "physics.mechanics",
+        "physics.simple_harmonic_motion",
+        "physics.thermodynamics",
+        "physics.waves"
       ],
       "description": "Domain classification for this model"
     },

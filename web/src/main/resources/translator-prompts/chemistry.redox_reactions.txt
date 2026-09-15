@@ -1,0 +1,6 @@
+=== chemistry.redox_reactions ===
+Redox chemistry: cell potentials, Nernst equation, electrochemistry, thermodynamics of half-reactions.
+Quantities: standard electrode potential (V), number of electrons transferred, reaction quotient Q, temperature.
+Supported operations: cell_potential, nernst_equation, gibbs_free_energy_from_cell, equilibrium_constant_from_cell.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate cell potential at non-standard conditions using Nernst equation.

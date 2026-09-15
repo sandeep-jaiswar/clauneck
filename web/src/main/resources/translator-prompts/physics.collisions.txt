@@ -1,0 +1,7 @@
+=== physics.collisions ===
+Collision analysis: elastic/perfectly inelastic collisions, momentum conservation, kinetic energy, impulse.
+Quantities: mass (kg), velocity (m/s), momentum, kinetic energy, coefficient of restitution, impulse.
+Supported operations: elastic_1d_final_velocities, inelastic_1d_final_velocity, momentum, kinetic_energy,
+coefficient_of_restitution, impulse, center_of_mass.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations). Note: 1D collisions only in Phase 2.
+Example: calculate final velocities after elastic collision between 2kg ball at 3m/s and 3kg ball at 1m/s.

@@ -1,0 +1,7 @@
+=== chemistry.acid_base_equilibrium ===
+Acid-base equilibrium: pH, pOH, buffer equations, Henderson-Hasselbalch, titration curves.
+Quantities: H+ concentration (mol/L), OH- concentration, Ka, pKa, pH, pOH, buffer capacity.
+Supported operations: ph_from_h, poh_from_oh, h_from_ph, oh_from_poh, poh_from_ph,
+henderson_hasselbalch, ka_from_pka, pka_from_ka, weak_acid_ph, titration_equivalence_volume.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations, exact quadratic for weak acids).
+Example: calculate pH of 0.1 M weak acid solution with Ka=1.8e-5.

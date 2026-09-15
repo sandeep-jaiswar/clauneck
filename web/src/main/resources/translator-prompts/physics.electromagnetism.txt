@@ -1,0 +1,8 @@
+=== physics.electromagnetism ===
+Coulomb's law, electric/magnetic fields, circuits, Ohm's law, energy storage, electromagnetic induction.
+Quantities: charge (C), electric field (N/C), voltage (V), current (A), resistance (Ω), capacitance (F), magnetic field (T).
+Supported operations: coulomb_force, electric_field_point_charge, electric_potential_point_charge,
+ohms_law_voltage, ohms_law_current, ohms_law_resistance, power_electrical, series_resistance,
+parallel_resistance, capacitor_energy, magnetic_force_on_charge, faraday_emf.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate voltage across resistor with current 2A and resistance 10Ω.

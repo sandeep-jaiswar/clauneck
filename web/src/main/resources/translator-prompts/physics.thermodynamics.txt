@@ -1,0 +1,7 @@
+=== physics.thermodynamics ===
+Ideal gas law, thermodynamic work, heat transfer, entropy, efficiency calculations.
+Quantities: pressure (Pa), volume (m³), temperature (K), moles, heat capacity, heat (J), entropy.
+Supported operations: ideal_gas_pressure, ideal_gas_volume, ideal_gas_temperature, ideal_gas_moles,
+work_isobaric, work_isothermal, heat_transfer, first_law_delta_u, carnot_efficiency, entropy_change_isothermal.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate pressure from ideal gas law with n=1 mol, R=8.314, T=300K, V=0.024 m³.

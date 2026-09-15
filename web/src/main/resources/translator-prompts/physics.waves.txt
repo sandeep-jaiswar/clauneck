@@ -1,0 +1,6 @@
+=== physics.waves ===
+Wave propagation, wavelength, frequency, Doppler effect, standing waves, interference.
+Quantities: frequency (Hz), wavelength (m), wave speed (m/s), period (s), amplitudes, harmonics.
+Supported operations: wave_speed, wavelength, frequency, period, doppler_frequency, standing_wave_frequency, beat_frequency.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate wave speed from frequency 440 Hz and wavelength 0.78 m.

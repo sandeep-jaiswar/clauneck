@@ -1,0 +1,8 @@
+=== chemistry.kinetics ===
+Reaction rate laws, half-life, Arrhenius equation, temperature dependence of rate constants.
+Quantities: initial concentration (mol/L), rate constant k, time (s), temperature (K), activation energy (J/mol).
+Supported operations: zero_order_concentration, zero_order_half_life, first_order_concentration,
+first_order_half_life, second_order_concentration, second_order_half_life,
+arrhenius_rate_constant, arrhenius_activation_energy.
+Solver method: SYMBOLIC_SOLVE (closed-form integrated rate laws, not differential equations).
+Example: calculate concentration after 10s for first-order reaction with [A]0=0.1 M, k=0.05 s^-1.

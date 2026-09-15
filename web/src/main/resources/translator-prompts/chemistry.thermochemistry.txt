@@ -1,0 +1,7 @@
+=== chemistry.thermochemistry ===
+Enthalpy, Hess's law, calorimetry, bond energies, enthalpy of reaction.
+Quantities: heat (J or kJ), enthalpy change (kJ/mol), mass (g), specific heat capacity, moles.
+Supported operations: hess_law_sum, standard_enthalpy_reaction, calorimetry_heat,
+bond_energy_enthalpy, enthalpy_per_mole.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: calculate standard enthalpy of reaction from formation enthalpies of products and reactants.

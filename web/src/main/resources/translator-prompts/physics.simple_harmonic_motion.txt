@@ -1,0 +1,7 @@
+=== physics.simple_harmonic_motion ===
+Oscillatory motion: springs, pendulums, damping, resonance, phase/amplitude/period.
+Quantities: amplitude (m), angular frequency (rad/s), spring constant (N/m), mass (kg), damping coefficient, period (s).
+Supported operations: angular_frequency_spring, angular_frequency_pendulum, period_spring, period_pendulum,
+max_velocity, max_acceleration, total_energy, damped_amplitude, position_at_t.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations). Optional: provide timeSpan for position trajectory.
+Example: calculate period of spring with m=0.5kg, k=100 N/m.
