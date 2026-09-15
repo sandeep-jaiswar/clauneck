@@ -162,3 +162,57 @@ def run_dispatch(model, quantities: Dict[str, Quantity],
         else:
             summary[key] = result
     return summary
+
+
+# ============ Coordinate Transform Helpers ============
+
+def to_cylindrical(x: float, y: float) -> Tuple[float, float]:
+    """
+    Convert 2D Cartesian coordinates (x, y) to cylindrical (rho, phi).
+    rho = sqrt(x^2 + y^2), phi = atan2(y, x) (in radians).
+    Returns (rho, phi).
+    """
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return float(rho), float(phi)
+
+
+def from_cylindrical(rho: float, phi: float) -> Tuple[float, float]:
+    """
+    Convert 2D cylindrical coordinates (rho, phi) to Cartesian (x, y).
+    x = rho * cos(phi), y = rho * sin(phi) (phi in radians).
+    Returns (x, y).
+    """
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return float(x), float(y)
+
+
+def to_spherical(x: float, y: float, z: float) -> Tuple[float, float, float]:
+    """
+    Convert 3D Cartesian coordinates (x, y, z) to spherical (r, theta, phi).
+    r = sqrt(x^2 + y^2 + z^2), theta = acos(z/r) (polar angle, [0, pi]),
+    phi = atan2(y, x) (azimuthal angle, radians, [-pi, pi]).
+    Returns (r, theta, phi).
+    """
+    r = np.sqrt(x**2 + y**2 + z**2)
+    if r == 0:
+        raise ValueError("Cannot convert (0, 0, 0) to spherical coordinates")
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+    return float(r), float(theta), float(phi)
+
+
+def from_spherical(r: float, theta: float, phi: float) -> Tuple[float, float, float]:
+    """
+    Convert 3D spherical coordinates (r, theta, phi) to Cartesian (x, y, z).
+    x = r * sin(theta) * cos(phi),
+    y = r * sin(theta) * sin(phi),
+    z = r * cos(theta).
+    All angles in radians.
+    Returns (x, y, z).
+    """
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    return float(x), float(y), float(z)

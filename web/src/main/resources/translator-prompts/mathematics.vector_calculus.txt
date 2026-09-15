@@ -1,0 +1,6 @@
+=== mathematics.vector_calculus ===
+Vector calculus: gradient, divergence, curl, directional derivatives, Laplacian, line/surface/volume integrals, Green's/Stokes'/divergence theorems, coordinate transforms.
+Quantities: scalar fields (pressure, temperature), vector fields (velocity, electric field), grid spacings (dx, dy, dz), surface normals, areas, volumes, coordinates.
+Supported operations: gradient_2d, gradient_3d, divergence_2d, divergence_3d, curl_2d, curl_3d, directional_derivative, laplacian_2d, laplacian_3d, line_integral, surface_integral, volume_integral, greens_theorem, stokes_theorem, divergence_theorem, cartesian_to_cylindrical, cylindrical_to_cartesian, cartesian_to_spherical, spherical_to_cartesian, curl_cylindrical, curl_spherical, div_spherical.
+Solver method: SYMBOLIC_SOLVE (closed-form differential/integral operations using finite differences and coordinate geometry).
+Example: compute gradient of a scalar field f, divergence of a velocity field v, or curl of an electric field E for use in Maxwell's equations.
