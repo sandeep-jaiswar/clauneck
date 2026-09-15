@@ -138,6 +138,7 @@ class PrototypeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson("Ball at 20 m/s")))
                 .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.error").value("ENGINE_UNAVAILABLE"));
+                .andExpect(jsonPath("$.error").value("ENGINE_UNAVAILABLE"))
+                .andExpect(jsonPath("$.details").value("The solver engine request failed"));
     }
 }

@@ -7,6 +7,7 @@ import com.clauneck.web.dto.SolverResultDto;
 import com.clauneck.web.exception.EngineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
@@ -21,7 +22,8 @@ public class EngineClient {
     private final RestTemplate restTemplate;
     private final EngineProperties properties;
 
-    public EngineClient(RestTemplate restTemplate, EngineProperties properties) {
+    public EngineClient(@Qualifier("engineRestTemplate") RestTemplate restTemplate,
+                        EngineProperties properties) {
         this.restTemplate = restTemplate;
         this.properties = properties;
     }

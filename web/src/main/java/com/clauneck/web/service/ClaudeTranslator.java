@@ -1,6 +1,7 @@
 package com.clauneck.web.service;
 
 import com.clauneck.web.config.TranslatorProperties;
+import com.clauneck.web.dto.Quantity;
 import com.clauneck.web.dto.ScientificModelDto;
 import com.clauneck.web.exception.ClaudeUnavailableException;
 import com.clauneck.web.exception.ModelValidationException;
@@ -9,9 +10,13 @@ import com.clauneck.web.exception.UnsupportedDomainException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -42,7 +47,7 @@ public class ClaudeTranslator {
             1. Output ONLY valid JSON matching the schema below. No preamble, no explanation, no markdown code fences.
             2. Domain: ONLY physics.mechanics (projectile motion). Reject other domains.
             3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.).
-            4. Include drag_coeff only if user mentions drag, air resistance, or friction.
+            4. Always include drag_coeff. Use 0.0 when the user does not mention drag, air resistance, or friction.
             5. Default values:
                - g (gravity): 9.81 m/s^2
                - angle: 45 degrees (if not specified)
@@ -114,7 +119,8 @@ public class ClaudeTranslator {
     private final SchemaValidator schemaValidator;
     private final TranslatorProperties properties;
 
-    public ClaudeTranslator(RestTemplate restTemplate, ObjectMapper objectMapper,
+    public ClaudeTranslator(@Qualifier("translatorRestTemplate") RestTemplate restTemplate,
+                             ObjectMapper objectMapper,
                              SchemaValidator schemaValidator, TranslatorProperties properties) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
@@ -146,6 +152,12 @@ public class ClaudeTranslator {
             }
         }
 
+        if (lastFailure instanceof JsonParseUnusableException) {
+            throw new TranslationException(
+                    "Claude returned unusable model JSON after " + maxAttempts + " attempt(s)",
+                    "Try rephrasing the query with explicit numeric values and units",
+                    lastFailure);
+        }
         throw new ClaudeUnavailableException(
                 "Claude API did not return a usable response after " + maxAttempts + " attempt(s)",
                 lastFailure);
@@ -193,6 +205,10 @@ public class ClaudeTranslator {
             throw new JsonParseUnusableException("Claude output was not valid JSON: " + e.getMessage());
         }
 
+        if (node == null || !node.isObject()) {
+            throw new JsonParseUnusableException("Claude output must be a JSON object");
+        }
+
         if (isDeclineResponse(node)) {
             String reason = node.path("reason").asText("Query could not be translated");
             String suggestion = node.path("suggestion").asText(null);
@@ -207,11 +223,16 @@ public class ClaudeTranslator {
                     "Claude output did not match the expected model shape: " + e.getMessage());
         }
 
+        if (model == null) {
+            throw new JsonParseUnusableException("Claude output did not contain a model");
+        }
+
         if (model.getDomain() == null || !SUPPORTED_DOMAIN.equals(model.getDomain())) {
             throw new UnsupportedDomainException(model.getDomain());
         }
 
-        List<String> validationErrors = schemaValidator.validate(node);
+        List<String> validationErrors = new ArrayList<>(schemaValidator.validate(node));
+        validatePhysicsParameters(model, validationErrors);
         if (!validationErrors.isEmpty()) {
             throw new ModelValidationException(validationErrors);
         }
@@ -221,6 +242,66 @@ public class ClaudeTranslator {
         model.getMetadata().setOriginalQuery(originalQuery);
 
         return model;
+    }
+
+    private void validatePhysicsParameters(ScientificModelDto model, List<String> validationErrors) {
+        Map<String, Quantity> quantities = new HashMap<>();
+        if (model.getQuantities() != null) {
+            for (Quantity quantity : model.getQuantities()) {
+                if (quantity != null && quantity.getName() != null) {
+                    quantities.put(quantity.getName(), quantity);
+                }
+            }
+        }
+
+        validateGreaterThanZero("v0", effectiveValue(model, quantities, "v0", null), validationErrors);
+        validateGreaterThanZero("mass", effectiveValue(model, quantities, "mass", null), validationErrors);
+        validateGreaterThanZero("g", effectiveValue(model, quantities, "g", null), validationErrors);
+
+        Double dragCoefficient = effectiveValue(model, quantities, "drag_coeff", 0.0);
+        if (dragCoefficient == null || !Double.isFinite(dragCoefficient) || dragCoefficient < 0.0) {
+            validationErrors.add("drag_coeff must be greater than or equal to 0");
+        }
+
+        Double angle = effectiveValue(model, quantities, "angle", null);
+        Quantity angleQuantity = quantities.get("angle");
+        if (angle == null || !Double.isFinite(angle)) {
+            validationErrors.add("angle must be a finite number between 0 and 90 degrees");
+            return;
+        }
+        if (angleQuantity == null || angleQuantity.getSiUnit() == null) {
+            validationErrors.add("angle must declare a unit of deg or rad");
+            return;
+        }
+
+        double angleDegrees;
+        if ("deg".equals(angleQuantity.getSiUnit())) {
+            angleDegrees = angle;
+        } else if ("rad".equals(angleQuantity.getSiUnit())) {
+            angleDegrees = Math.toDegrees(angle);
+        } else {
+            validationErrors.add("angle must declare a unit of deg or rad");
+            return;
+        }
+        if (angleDegrees < 0.0 || angleDegrees > 90.0) {
+            validationErrors.add("angle must be between 0 and 90 degrees");
+        }
+    }
+
+    private Double effectiveValue(ScientificModelDto model, Map<String, Quantity> quantities,
+                                  String name, Double defaultValue) {
+        Map<String, Double> initialConditions = model.getInitialConditions();
+        if (initialConditions != null && initialConditions.containsKey(name)) {
+            return initialConditions.get(name);
+        }
+        Quantity quantity = quantities.get(name);
+        return quantity != null && quantity.getValue() != null ? quantity.getValue() : defaultValue;
+    }
+
+    private void validateGreaterThanZero(String name, Double value, List<String> validationErrors) {
+        if (value == null || !Double.isFinite(value) || value <= 0.0) {
+            validationErrors.add(name + " must be greater than 0");
+        }
     }
 
     private boolean isDeclineResponse(JsonNode node) {

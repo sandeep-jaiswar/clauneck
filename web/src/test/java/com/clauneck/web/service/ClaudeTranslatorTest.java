@@ -34,12 +34,16 @@ class ClaudeTranslatorTest {
               "domain": "physics.mechanics",
               "description": "Ball at 20 m/s, 45 degrees",
               "quantities": [
-                {"name": "v0", "value": 20.0, "siUnit": "m/s", "isKnown": true}
+                {"name": "v0", "value": 20.0, "siUnit": "m/s", "isKnown": true},
+                {"name": "angle", "value": 45.0, "siUnit": "deg", "isKnown": true},
+                {"name": "mass", "value": 1.0, "siUnit": "kg", "isKnown": true},
+                {"name": "g", "value": 9.81, "siUnit": "m/s^2", "isKnown": true},
+                {"name": "drag_coeff", "value": 0.0, "siUnit": "dimensionless", "isKnown": true}
               ],
               "equations": [
                 {"lhs": "d2x/dt2", "rhs": "-g", "type": "ode"}
               ],
-              "initialConditions": {"v0": 20.0},
+              "initialConditions": {"v0": 20.0, "angle": 45.0, "mass": 1.0, "g": 9.81, "drag_coeff": 0.0},
               "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0.0, "end": 5.0, "numPoints": 5000}},
               "metadata": {"source": "manual", "originalQuery": "placeholder"}
             }
@@ -104,14 +108,55 @@ class ClaudeTranslatorTest {
     }
 
     @Test
-    void malformedJsonRetriesThenThrowsClaudeUnavailable() {
+    void malformedJsonRetriesThenThrowsTranslationException() {
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
                 .thenReturn(responseWithText("this is not json at all"));
 
-        assertThrows(ClaudeUnavailableException.class, () -> translator.translate("garbled query"));
+        assertThrows(TranslationException.class, () -> translator.translate("garbled query"));
 
         verify(restTemplate, times(properties.getMaxRetries()))
                 .postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class));
+    }
+
+    @Test
+    void nonObjectJsonRetriesThenThrowsTranslationException() {
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
+                .thenReturn(responseWithText("null"), responseWithText("[]"));
+
+        assertThrows(TranslationException.class, () -> translator.translate("garbled query"));
+
+        verify(restTemplate, times(properties.getMaxRetries()))
+                .postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class));
+    }
+
+    @Test
+    void initialConditionsTakePrecedenceDuringPhysicsValidation() {
+        String invalidInitialVelocity = VALID_MODEL_JSON.replace(
+                "\"v0\": 20.0, \"angle\"", "\"v0\": -1.0, \"angle\"");
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
+                .thenReturn(responseWithText(invalidInitialVelocity));
+
+        ModelValidationException ex = assertThrows(ModelValidationException.class,
+                () -> translator.translate("Ball at 20 m/s"));
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                ex.getValidationErrors().contains("v0 must be greater than 0"));
+    }
+
+    @Test
+    void angleValidationConvertsDeclaredRadiansToDegrees() {
+        String invalidRadianAngle = VALID_MODEL_JSON
+                .replace("\"value\": 45.0, \"siUnit\": \"deg\"",
+                        "\"value\": 2.0, \"siUnit\": \"rad\"")
+                .replace("\"angle\": 45.0", "\"angle\": 2.0");
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
+                .thenReturn(responseWithText(invalidRadianAngle));
+
+        ModelValidationException ex = assertThrows(ModelValidationException.class,
+                () -> translator.translate("Ball launched at 2 radians"));
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                ex.getValidationErrors().contains("angle must be between 0 and 90 degrees"));
     }
 
     @Test

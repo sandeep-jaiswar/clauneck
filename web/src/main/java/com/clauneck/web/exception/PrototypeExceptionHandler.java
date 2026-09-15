@@ -50,6 +50,7 @@ public class PrototypeExceptionHandler {
         log.error("Engine call failed", e);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(
                 "ENGINE_UNAVAILABLE", "The solver engine is unavailable or returned an error",
-                e.getMessage(), "Confirm the engine is running (POST /health on its port) and retry"));
+                "The solver engine request failed",
+                "Confirm the engine is running (POST /health on its port) and retry"));
     }
 }

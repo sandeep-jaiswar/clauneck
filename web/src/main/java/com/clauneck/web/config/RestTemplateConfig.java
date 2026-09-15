@@ -6,20 +6,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * Single RestTemplate reused for both the Claude API call and the engine call.
- * Timeout is the max of the two configured service timeouts so neither call
- * is cut off early.
- */
+/** Configures service-specific HTTP clients so each outbound call uses its own deadline. */
 @Configuration
 public class RestTemplateConfig {
 
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder,
-                                      TranslatorProperties translatorProperties,
-                                      EngineProperties engineProperties) {
-        int timeoutSeconds = Math.max(translatorProperties.getTimeoutSeconds(),
-                engineProperties.getTimeoutSeconds());
+    public RestTemplate translatorRestTemplate(RestTemplateBuilder builder,
+                                                TranslatorProperties translatorProperties) {
+        return buildRestTemplate(builder, translatorProperties.getTimeoutSeconds());
+    }
+
+    @Bean
+    public RestTemplate engineRestTemplate(RestTemplateBuilder builder,
+                                            EngineProperties engineProperties) {
+        return buildRestTemplate(builder, engineProperties.getTimeoutSeconds());
+    }
+
+    private RestTemplate buildRestTemplate(RestTemplateBuilder builder, int timeoutSeconds) {
         Duration timeout = Duration.ofSeconds(timeoutSeconds);
         return builder
                 .setConnectTimeout(timeout)

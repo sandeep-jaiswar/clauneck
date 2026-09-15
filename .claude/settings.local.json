@@ -52,15 +52,16 @@
       "Bash(echo \"started with PID $!\")",
       "Bash(curl -s -o /dev/null -w \"connect check: %{http_code}\\\\n\" http://localhost:8080/api/prototype -X POST -H \"Content-Type: application/json\" -d '{}' --max-time 5)",
       "Bash(curl -s http://localhost:8080/api/prototype -X POST -H \"Content-Type: application/json\" -d '{}' --max-time 5)",
-      "Bash(curl *)",
       "Bash(pkill -f \"web:bootRun\")",
       "Bash(pkill -f \"GradleDaemon\")",
       "Bash(pkill -f \"uvicorn app.main:app --port 8001\")",
       "Bash(./gradlew :web:test --console=plain)",
       "Bash(git fetch *)",
       "Bash(git pull *)",
-      "Bash(git push *)",
       "Bash(./gradlew :web:test --info)"
+    ],
+    "ask": [
+      "Bash(git push *)"
     ]
   }
 }
