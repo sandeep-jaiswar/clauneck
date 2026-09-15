@@ -1,0 +1,6 @@
+=== physics.fluid_mechanics ===
+Fluid mechanics: hydrostatic pressure, buoyancy, continuity equation, Bernoulli's principle, Poiseuille flow, Reynolds number, drag.
+Quantities: pressure (Pa), density (kg/m³), height (m), volume (m³), velocity (m/s), area (m²), viscosity (Pa⋅s), flow rate (m³/s), radius (m), length (m), drag coefficient (dimensionless), mass (kg).
+Supported operations: hydrostatic_pressure, buoyant_force, continuity_velocity2, bernoulli_pressure2, poiseuille_flow_rate, reynolds_number, torricelli_efflux_velocity, drag_force.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: Water with density 1000 kg/m³ flows through a pipe. At point 1: area 0.01 m², velocity 2 m/s. At point 2: area 0.005 m². What is the velocity at point 2?
