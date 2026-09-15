@@ -1,11 +1,10 @@
 """Rotational dynamics solver (physics.rotational_dynamics domain)."""
-from typing import Dict
 import math
 import numpy as np
 from app.model import ScientificModel, SolverResult, Quantity
 from app.solvers.base import SolverBase
 from app.solvers.registry import register
-from app.solvers.utils import run_dispatch, to_radians
+from app.solvers.utils import run_dispatch
 
 
 def _torque(F: float, r: float, theta: float) -> float:
@@ -60,15 +59,15 @@ def _angular_acceleration(tau: float, I: float) -> float:
 
 def _angular_momentum(I: float, omega: float) -> float:
     """Angular momentum: L = I × ω (kg⋅m²/s)."""
-    if I < 0:
-        raise ValueError("Moment of inertia I must be non-negative")
+    if I <= 0:
+        raise ValueError("Moment of inertia I must be greater than 0")
     return float(I * omega)
 
 
 def _rotational_kinetic_energy(I: float, omega: float) -> float:
     """Rotational kinetic energy: KE = ½ × I × ω² (Joules)."""
-    if I < 0:
-        raise ValueError("Moment of inertia I must be non-negative")
+    if I <= 0:
+        raise ValueError("Moment of inertia I must be greater than 0")
     return float(0.5 * I * omega**2)
 
 

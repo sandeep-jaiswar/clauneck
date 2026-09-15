@@ -415,6 +415,8 @@ def test_determinism_rotational_kinetic_energy(rotational_kinetic_energy_model):
         ("moment_of_inertia_point_mass(m, r)", {"m": -2, "r": 0.5}, "Mass m must be non-negative"),
         ("moment_of_inertia_disk(m, r)", {"m": 2, "r": -0.5}, "Radius r must be non-negative"),
         ("angular_acceleration(tau, I)", {"tau": 5, "I": 0}, "Moment of inertia I must be greater than 0"),
+        ("angular_momentum(I, omega)", {"I": 0, "omega": 5}, "Moment of inertia I must be greater than 0"),
+        ("rotational_kinetic_energy(I, omega)", {"I": 0, "omega": 10}, "Moment of inertia I must be greater than 0"),
         ("angular_velocity_from_time(omega0, alpha, t)", {"omega0": 5, "alpha": 2, "t": -1}, "Time t must be non-negative"),
         ("angular_displacement(omega0, alpha, t)", {"omega0": 0, "alpha": 4, "t": -2}, "Time t must be non-negative"),
         ("rolling_without_slipping_velocity(omega, r)", {"omega": 20, "r": -0.5}, "Radius r must be non-negative"),
