@@ -1,9 +1,39 @@
 # Build artifacts
 .gradle/
+build/
+bin/
+dist/
+*.class
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
 
 # User-specific settings (not version-controlled)
 .claude/settings.json
-.claude/settings.local.json
+.claude/settings.local.json*
 .claude/.env
 
 # Include CLAUDE.md and skills (needed for AI-Native SDLC)
