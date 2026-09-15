@@ -38,10 +38,20 @@ class ProjectileMotionSolver:
             angle = self._get_value(quantities, "angle", ic)
             mass = self._get_value(quantities, "mass", ic)
             g = self._get_value(quantities, "g", ic)
-            drag_coeff = self._get_value(quantities, "drag_coeff", ic)
+            drag_coeff = self._get_optional_value(
+                quantities, "drag_coeff", ic, default=0.0
+            )
 
-            # Convert angle to radians if needed
-            angle_rad = np.radians(angle) if angle > 1 else angle
+            # Convert only when the model explicitly declares degrees.
+            angle_unit = quantities["angle"].siUnit
+            if angle_unit == "deg":
+                angle_rad = np.radians(angle)
+            elif angle_unit == "rad":
+                angle_rad = angle
+            else:
+                raise ValueError(
+                    f"Unsupported angle unit '{angle_unit}'; expected 'deg' or 'rad'"
+                )
 
             # Initial conditions
             vx0 = v0 * np.cos(angle_rad)
@@ -64,6 +74,12 @@ class ProjectileMotionSolver:
 
                 return [vx, vy, ax, ay]
 
+            def ground_crossing(t, state):
+                return state[1]
+
+            ground_crossing.terminal = True
+            ground_crossing.direction = -1
+
             # Determine time span
             time_span = model.solver.timeSpan
             if time_span:
@@ -84,10 +100,11 @@ class ProjectileMotionSolver:
                 method=self._map_solver_method(model.solver.method),
                 rtol=model.solver.tolerance,
                 atol=model.solver.tolerance * 1e-2,
-                dense_output=True
+                dense_output=True,
+                events=ground_crossing,
             )
 
-            if not sol.status == 0:
+            if not sol.success:
                 return SolverResult(
                     success=False,
                     message=f"Integration failed: {sol.message}",
@@ -145,6 +162,16 @@ class ProjectileMotionSolver:
             return quantities[name].value
         raise ValueError(f"No value for quantity: {name}")
 
+    def _get_optional_value(self, quantities: Dict[str, Quantity],
+                            name: str, ic: Dict[str, float],
+                            default: float) -> float:
+        """Get an optional quantity value, falling back to a domain default."""
+        if name in ic:
+            return ic[name]
+        if name in quantities and quantities[name].value is not None:
+            return quantities[name].value
+        return default
+
     def _map_solver_method(self, method: SolverMethod) -> str:
         """Map our SolverMethod enum to scipy method name."""
         mapping = {
@@ -168,9 +195,12 @@ class GeneralSolver:
         Route to the appropriate specialized solver based on domain.
         """
         if model.domain == "physics.mechanics":
-            # Check if it's projectile motion
-            eq_rhss = [eq.rhs for eq in model.equations]
-            if any("drag" in rhs.lower() for rhs in eq_rhss):
+            quantity_names = {quantity.name for quantity in model.quantities}
+            equation_lhss = {equation.lhs.replace(" ", "") for equation in model.equations}
+            required_quantities = {"v0", "angle", "mass", "g"}
+            required_equations = {"d2x/dt2", "d2y/dt2"}
+            if (required_quantities <= quantity_names
+                    and required_equations <= equation_lhss):
                 return ProjectileMotionSolver().solve(model)
 
         # Fallback: not yet implemented

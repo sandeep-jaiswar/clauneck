@@ -1,5 +1,9 @@
 package com.clauneck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -7,20 +11,48 @@ import java.util.Optional;
  * Configuration for the numerical solver.
  */
 public class SolverConfig {
-  public enum Method { RK45, RK23, DOP853, SOLVE_IVP, ODEINT, SYMBOLIC_SOLVE, FSOLVE }
+  public enum Method {
+    RK45("RK45"),
+    RK23("RK23"),
+    DOP853("DOP853"),
+    SOLVE_IVP("solve_ivp"),
+    ODEINT("odeint"),
+    SYMBOLIC_SOLVE("symbolic_solve"),
+    FSOLVE("fsolve");
+
+    private final String schemaValue;
+
+    Method(String schemaValue) {
+      this.schemaValue = schemaValue;
+    }
+
+    @JsonValue
+    public String getSchemaValue() {
+      return schemaValue;
+    }
+
+    @JsonCreator
+    public static Method fromSchemaValue(String value) {
+      for (Method method : values()) {
+        if (method.schemaValue.equals(value)) {
+          return method;
+        }
+      }
+      throw new IllegalArgumentException("Unknown solver method: " + value);
+    }
+  }
 
   private final Method method;
   private final double tolerance;
-  private final int maxSteps;
-  private final Optional<TimeSpan> timeSpan;
+  private final TimeSpan timeSpan;
 
-  public static final SolverConfig DEFAULT = new SolverConfig(
-      Method.RK45, 1e-6, 10000, Optional.empty());
-
-  public SolverConfig(Method method, double tolerance, int maxSteps, Optional<TimeSpan> timeSpan) {
+  @JsonCreator
+  public SolverConfig(
+      @JsonProperty(value = "method", required = true) Method method,
+      @JsonProperty(value = "tolerance", required = true) double tolerance,
+      @JsonProperty(value = "timeSpan", required = true) TimeSpan timeSpan) {
     this.method = Objects.requireNonNull(method);
     this.tolerance = tolerance;
-    this.maxSteps = maxSteps;
     this.timeSpan = Objects.requireNonNull(timeSpan);
   }
 
@@ -29,10 +61,9 @@ public class SolverConfig {
   }
 
   public static class Builder {
-    private Method method = Method.RK45;
-    private double tolerance = 1e-6;
-    private int maxSteps = 10000;
-    private Optional<TimeSpan> timeSpan = Optional.empty();
+    private Method method;
+    private Double tolerance;
+    private TimeSpan timeSpan;
 
     public Builder method(Method m) {
       this.method = m;
@@ -44,35 +75,37 @@ public class SolverConfig {
       return this;
     }
 
-    public Builder maxSteps(int steps) {
-      this.maxSteps = steps;
-      return this;
-    }
-
     public Builder timeSpan(TimeSpan span) {
-      this.timeSpan = Optional.of(span);
+      this.timeSpan = span;
       return this;
     }
 
     public SolverConfig build() {
-      return new SolverConfig(method, tolerance, maxSteps, timeSpan);
+      Objects.requireNonNull(method, "method is required");
+      Objects.requireNonNull(tolerance, "tolerance is required");
+      Objects.requireNonNull(timeSpan, "timeSpan is required");
+      return new SolverConfig(method, tolerance, timeSpan);
     }
   }
 
   public Method getMethod() { return method; }
   public double getTolerance() { return tolerance; }
-  public int getMaxSteps() { return maxSteps; }
-  public Optional<TimeSpan> getTimeSpan() { return timeSpan; }
+  public TimeSpan getTimeSpan() { return timeSpan; }
 
+  @JsonInclude(JsonInclude.Include.NON_ABSENT)
   public static class TimeSpan {
     private final double start;
     private final double end;
     private final Optional<Integer> numPoints;
 
-    public TimeSpan(double start, double end, Optional<Integer> numPoints) {
+    @JsonCreator
+    public TimeSpan(
+        @JsonProperty(value = "start", required = true) double start,
+        @JsonProperty(value = "end", required = true) double end,
+        @JsonProperty("numPoints") Optional<Integer> numPoints) {
       this.start = start;
       this.end = end;
-      this.numPoints = Objects.requireNonNull(numPoints);
+      this.numPoints = numPoints == null ? Optional.empty() : numPoints;
     }
 
     public double getStart() { return start; }

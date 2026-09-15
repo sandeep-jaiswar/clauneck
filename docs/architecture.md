@@ -63,7 +63,7 @@ Components:
 
 Runs before solver is invoked; catches nonsense early.
 
-### Layer 4: Compute Engine (Python `engine-python` module)
+### Layer 4: Compute Engine (Python `engine` module)
 
 **Responsibility**: Deterministic solving via SymPy (symbolic) + SciPy (numeric)
 
@@ -103,7 +103,7 @@ clauneck/
 │   │       ├── model/              # Model, Quantity, Equation, Solver config
 │   │       └── validation/          # DimensionalAnalyzer
 │   └── build.gradle                # JUnit 5 for tests
-├── engine-python/
+├── engine/
 │   ├── app/
 │   │   ├── main.py                 # FastAPI app + /api/solve endpoint
 │   │   ├── model.py                # Pydantic models (from schema)
@@ -116,7 +116,7 @@ clauneck/
 │   │   └── com/clauneck/web/
 │   │       ├── api/                # PrototypeController
 │   │       ├── translator/         # ClaudeTranslatorClient
-│   │       └── engine/             # EngineClient (HTTP calls to engine-python)
+│   │       └── engine/             # EngineClient (HTTP calls to engine)
 │   └── build.gradle                # Spring Boot 3.2.2
 ├── api/
 │   └── build.gradle                # (unchanged; for future use)
@@ -126,7 +126,7 @@ clauneck/
 │       ├── 0001-polyglot-monorepo.md
 │       └── 0002-llm-translator-boundary.md
 ├── Makefile                        # Root orchestration: make build, make test, make run
-├── CLAUDE.md                       # (updated) Project conventions + new engine-python section
+├── CLAUDE.md                       # (updated) Project conventions + new engine section
 └── settings.gradle                 # Includes: core, web, api
 ```
 
@@ -147,11 +147,11 @@ Output (Model JSON):
   "id": "projectile-1",
   "domain": "physics.mechanics",
   "quantities": [
-    {"name": "v0", "value": 20, "siUnit": "m/s"},
-    {"name": "angle", "value": 45, "siUnit": "rad"},
-    {"name": "mass", "value": 0.5, "siUnit": "kg"},
-    {"name": "g", "value": 9.81, "siUnit": "m/s^2"},
-    {"name": "drag_coeff", "value": 0.1, "siUnit": "dimensionless"}
+    {"name": "v0", "value": 20, "siUnit": "m/s", "isKnown": true},
+    {"name": "angle", "value": 45, "siUnit": "deg", "isKnown": true},
+    {"name": "mass", "value": 0.5, "siUnit": "kg", "isKnown": true},
+    {"name": "g", "value": 9.81, "siUnit": "m/s^2", "isKnown": true},
+    {"name": "drag_coeff", "value": 0.1, "siUnit": "dimensionless", "isKnown": true}
   ],
   "equations": [
     {
@@ -163,7 +163,11 @@ Output (Model JSON):
       "rhs": "-g - drag_coeff * vy * |v| / mass"
     }
   ],
-  "solver": {"method": "RK45", "tolerance": 1e-6}
+  "solver": {
+    "method": "RK45",
+    "tolerance": 1e-6,
+    "timeSpan": {"start": 0, "end": 5, "numPoints": 500}
+  }
 }
 ```
 
@@ -266,15 +270,15 @@ See `Makefile` for full orchestration:
 make build      # gradle build + python setup
 make test       # gradle test + pytest
 make clean      # clean all artifacts
-make run        # start engine-python FastAPI service
+make run        # start engine FastAPI service
 ```
 
 Individual commands:
 ```bash
 gradle :core:build              # Build core module
 gradle :core:test               # Test core module
-cd engine-python && pytest      # Test Python engine
-cd engine-python && python -m uvicorn app.main:app --port 8001  # Run engine
+cd engine && pytest      # Test Python engine
+cd engine && python -m uvicorn app.main:app --port 8001  # Run engine
 ```
 
 ---

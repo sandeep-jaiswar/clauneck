@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import com.clauneck.core.model.Equation;
 import com.clauneck.core.model.Model;
 import com.clauneck.core.model.Quantity;
+import com.clauneck.core.model.SolverConfig;
 import com.clauneck.core.units.Dimension;
 import com.clauneck.core.units.UnitRegistry;
 import java.util.Optional;
@@ -50,6 +51,7 @@ public class DimensionalAnalyzerTest {
             .description("Horizontal acceleration")
             .build())
         .initialCondition("v0", 20)
+        .solverConfig(solverConfig())
         .build();
 
     DimensionalAnalyzer.ValidationResult result = analyzer.validate(model);
@@ -64,6 +66,7 @@ public class DimensionalAnalyzerTest {
             .siUnit("invalid_unit_xyz")
             .dimension(Dimension.VELOCITY)
             .build())
+        .solverConfig(solverConfig())
         .build();
 
     DimensionalAnalyzer.ValidationResult result = analyzer.validate(model);
@@ -81,11 +84,62 @@ public class DimensionalAnalyzerTest {
             .unknown()
             .build())
         .initialCondition("nonexistent_quantity", 100)
+        .solverConfig(solverConfig())
         .build();
 
     DimensionalAnalyzer.ValidationResult result = analyzer.validate(model);
     assertFalse(result.isValid());
     assertTrue(result.getErrors().stream()
         .anyMatch(e -> e.contains("unknown quantity")));
+  }
+
+  @Test
+  public void testDeclaredDimensionMustMatchUnitDimension() {
+    Model model = Model.builder("bad-dimension", "physics.mechanics")
+        .quantity(Quantity.builder("distance")
+            .siUnit("m")
+            .dimension(Dimension.TIME_DIMENSION)
+            .unknown()
+            .build())
+        .solverConfig(solverConfig())
+        .build();
+
+    DimensionalAnalyzer.ValidationResult result = analyzer.validate(model);
+
+    assertFalse(result.isValid());
+    assertTrue(result.getErrors().stream()
+        .anyMatch(e -> e.contains("does not match its declared dimension")));
+  }
+
+  @Test
+  public void testEquationQuantityDimensionsMustMatch() {
+    Model model = Model.builder("bad-equation", "physics.mechanics")
+        .quantity(Quantity.builder("distance")
+            .siUnit("m")
+            .dimension(Dimension.LENGTH_DIMENSION)
+            .unknown()
+            .build())
+        .quantity(Quantity.builder("duration")
+            .siUnit("s")
+            .dimension(Dimension.TIME_DIMENSION)
+            .unknown()
+            .build())
+        .equation(Equation.builder().lhs("distance").rhs("duration").build())
+        .solverConfig(solverConfig())
+        .build();
+
+    DimensionalAnalyzer.ValidationResult result = analyzer.validate(model);
+
+    assertFalse(result.isValid());
+    assertTrue(result.getErrors().stream()
+        .anyMatch(e -> e.contains("inconsistent dimensions")));
+  }
+
+  private SolverConfig solverConfig() {
+    return SolverConfig.builder()
+        .method(SolverConfig.Method.RK45)
+        .tolerance(1e-6)
+        .timeSpan(new SolverConfig.TimeSpan(0, 1, Optional.empty()))
+        .build();
   }
 }

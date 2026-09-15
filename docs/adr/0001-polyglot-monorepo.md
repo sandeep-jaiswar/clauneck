@@ -19,7 +19,7 @@ The question: monorepo or multi-repo? Single language or polyglot?
 ```
 clauneck/
 ├── core/ (Java)           # UnitSystem, dimensional analysis, schema validation
-├── engine-python/ (Python) # Symbolic + numeric solving (SymPy, SciPy)
+├── engine/ (Python)        # Symbolic + numeric solving (SymPy, SciPy)
 ├── web/ (Java)             # Spring Boot API gateway, LLM translation
 ├── schemas/ (JSON Schema)  # Shared contract across languages
 └── Makefile                # Root orchestration

@@ -50,12 +50,12 @@ public class UnitRegistry {
 
     try {
       // Simple tokenizer: split on / and *
-      String[] parts = unitString.split("/");
+      String[] parts = unitString.split("/", -1);
       Dimension result = Dimension.DIMENSIONLESS;
 
       // Numerator
       if (parts.length > 0) {
-        String[] numeratorTerms = parts[0].split("\\*");
+        String[] numeratorTerms = parts[0].split("\\*", -1);
         for (String term : numeratorTerms) {
           Dimension d = parseSingleTerm(term.trim());
           result = result.multiply(d);
@@ -65,7 +65,7 @@ public class UnitRegistry {
       // Denominator
       if (parts.length > 1) {
         for (int i = 1; i < parts.length; i++) {
-          String[] denominatorTerms = parts[i].split("\\*");
+          String[] denominatorTerms = parts[i].split("\\*", -1);
           for (String term : denominatorTerms) {
             Dimension d = parseSingleTerm(term.trim());
             result = result.divide(d);
@@ -84,7 +84,7 @@ public class UnitRegistry {
    */
   private Dimension parseSingleTerm(String term) throws IllegalArgumentException {
     if (term.isEmpty()) {
-      return Dimension.DIMENSIONLESS;
+      throw new IllegalArgumentException("Empty unit term");
     }
 
     // Handle exponents like "s^2"
@@ -95,6 +95,9 @@ public class UnitRegistry {
     if (caretIndex > 0) {
       unitName = term.substring(0, caretIndex);
       power = Double.parseDouble(term.substring(caretIndex + 1));
+      if (!Double.isFinite(power)) {
+        throw new IllegalArgumentException("Unit power must be finite");
+      }
     } else {
       unitName = term;
     }

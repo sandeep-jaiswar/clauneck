@@ -16,7 +16,7 @@ solver = GeneralSolver()
 
 
 @app.post("/api/solve", response_model=PrototypeResponse)
-async def solve_model(model: ScientificModel) -> PrototypeResponse:
+def solve_model(model: ScientificModel) -> PrototypeResponse:
     """
     Solve a scientific model.
 

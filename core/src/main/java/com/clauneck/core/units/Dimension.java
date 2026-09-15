@@ -1,5 +1,8 @@
 package com.clauneck.core.units;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -7,6 +10,7 @@ import java.util.Objects;
  * Fundamental dimension vector: [L, M, T, I, Θ, N, J]
  * Represents the dimensional exponents of a physical quantity.
  */
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Dimension {
   private static final int NUM_DIMENSIONS = 7;
   private final double[] exponents; // [length, mass, time, current, temperature, amount, luminous]
@@ -23,11 +27,22 @@ public class Dimension {
   public static final Dimension LENGTH_DIMENSION = new Dimension(1, 0, 0, 0, 0, 0, 0);
   public static final Dimension MASS_DIMENSION = new Dimension(0, 1, 0, 0, 0, 0, 0);
   public static final Dimension TIME_DIMENSION = new Dimension(0, 0, 1, 0, 0, 0, 0);
+  public static final Dimension CURRENT_DIMENSION = new Dimension(0, 0, 0, 1, 0, 0, 0);
+  public static final Dimension TEMPERATURE_DIMENSION = new Dimension(0, 0, 0, 0, 1, 0, 0);
+  public static final Dimension AMOUNT_DIMENSION = new Dimension(0, 0, 0, 0, 0, 1, 0);
+  public static final Dimension LUMINOUS_DIMENSION = new Dimension(0, 0, 0, 0, 0, 0, 1);
   public static final Dimension VELOCITY = new Dimension(1, 0, -1, 0, 0, 0, 0); // L/T
   public static final Dimension ACCELERATION = new Dimension(1, 0, -2, 0, 0, 0, 0); // L/T²
 
-  public Dimension(double length, double mass, double time, double current, double temperature,
-      double amount, double luminous) {
+  @JsonCreator
+  public Dimension(
+      @JsonProperty("length") double length,
+      @JsonProperty("mass") double mass,
+      @JsonProperty("time") double time,
+      @JsonProperty("electricCurrent") double current,
+      @JsonProperty("temperature") double temperature,
+      @JsonProperty("amountOfSubstance") double amount,
+      @JsonProperty("luminousIntensity") double luminous) {
     this.exponents = new double[] { length, mass, time, current, temperature, amount, luminous };
   }
 
@@ -84,7 +99,7 @@ public class Dimension {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Dimension dimension = (Dimension) o;
-    return isConsistentWith(dimension);
+    return Arrays.equals(exponents, dimension.exponents);
   }
 
   @Override
@@ -102,8 +117,11 @@ public class Dimension {
   public double getLength() { return exponents[LENGTH]; }
   public double getMass() { return exponents[MASS]; }
   public double getTime() { return exponents[TIME]; }
+  @JsonProperty("electricCurrent")
   public double getCurrent() { return exponents[CURRENT]; }
   public double getTemperature() { return exponents[TEMPERATURE]; }
+  @JsonProperty("amountOfSubstance")
   public double getAmount() { return exponents[AMOUNT]; }
+  @JsonProperty("luminousIntensity")
   public double getLuminous() { return exponents[LUMINOUS]; }
 }

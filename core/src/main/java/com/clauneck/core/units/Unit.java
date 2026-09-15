@@ -25,10 +25,10 @@ public class Unit {
   public static final Unit METER = new Unit("m", "meter", Dimension.LENGTH_DIMENSION, 1.0);
   public static final Unit KILOGRAM = new Unit("kg", "kilogram", Dimension.MASS_DIMENSION, 1.0);
   public static final Unit SECOND = new Unit("s", "second", Dimension.TIME_DIMENSION, 1.0);
-  public static final Unit AMPERE = new Unit("A", "ampere", Dimension.DIMENSIONLESS, 1.0);
-  public static final Unit KELVIN = new Unit("K", "kelvin", Dimension.DIMENSIONLESS, 1.0);
-  public static final Unit MOLE = new Unit("mol", "mole", Dimension.DIMENSIONLESS, 1.0);
-  public static final Unit CANDELA = new Unit("cd", "candela", Dimension.DIMENSIONLESS, 1.0);
+  public static final Unit AMPERE = new Unit("A", "ampere", Dimension.CURRENT_DIMENSION, 1.0);
+  public static final Unit KELVIN = new Unit("K", "kelvin", Dimension.TEMPERATURE_DIMENSION, 1.0);
+  public static final Unit MOLE = new Unit("mol", "mole", Dimension.AMOUNT_DIMENSION, 1.0);
+  public static final Unit CANDELA = new Unit("cd", "candela", Dimension.LUMINOUS_DIMENSION, 1.0);
 
   /**
    * Common derived units.

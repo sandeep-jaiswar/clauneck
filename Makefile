@@ -23,7 +23,7 @@ test: core-test engine-test
 clean:
 	@echo "Cleaning all build artifacts..."
 	gradle clean
-	cd engine-python && rm -rf build dist *.egg-info __pycache__ .pytest_cache || true
+	cd engine && rm -rf build dist *.egg-info __pycache__ .pytest_cache || true
 	@echo "✓ Clean complete"
 
 # Java / Gradle targets
