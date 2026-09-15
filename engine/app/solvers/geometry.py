@@ -1,8 +1,8 @@
 """Geometry solver for mathematics.geometry domain."""
 import re
 import math
-from typing import Dict, Optional
-from sympy import pi
+from typing import Dict, Tuple, Optional
+from sympy import symbols, pi, sqrt, solve, simplify
 
 from app.model import ScientificModel, SolverResult, Quantity
 from app.solvers.base import SolverBase
@@ -88,9 +88,14 @@ class GeometrySolver(SolverBase):
         lhs = equation.lhs.strip()
         rhs = equation.rhs.strip()
 
-        # LHS is the result variable name, RHS is the formula or constraint
-        var_name = lhs
-        formula_rhs = rhs
+        # Case 1: Direct formula evaluation (e.g., "area = area_circle(r)")
+        if "=" in lhs:
+            # Handle "var = formula" format
+            var_name = lhs.split("=")[0].strip()
+            formula_rhs = rhs
+        else:
+            var_name = lhs
+            formula_rhs = rhs
 
         # Try to evaluate the RHS formula
         result = self._evaluate_formula(formula_rhs, quantities_dict)
@@ -98,7 +103,7 @@ class GeometrySolver(SolverBase):
             return {var_name: float(result)}
 
         # Try to solve for unknowns (inverse problems)
-        return self._solve_for_unknown(equation, quantities_dict, model)
+        return self._solve_for_unknown(equation, quantities_dict)
 
     def _evaluate_formula(self, formula_str: str,
                           quantities_dict: Dict[str, Quantity]) -> Optional[float]:
@@ -147,8 +152,8 @@ class GeometrySolver(SolverBase):
         except (TypeError, ValueError, ZeroDivisionError):
             return None
 
-    def _solve_for_unknown(self, equation, quantities_dict: Dict[str, Quantity],
-                           model: ScientificModel) -> Optional[Dict[str, float]]:
+    def _solve_for_unknown(self, equation, quantities_dict: Dict[str, Quantity]
+                           ) -> Optional[Dict[str, float]]:
         """
         Solve for an unknown when given a constraint.
         Example: solve_for_radius_given_area where area is known.
@@ -172,13 +177,13 @@ class GeometrySolver(SolverBase):
 
         # Determine what we're solving for based on constraint
         if "area" in rhs.lower():
-            return self._solve_inverse_area(unknown_name, quantities_dict)
+            return self._solve_inverse_area(unknown_name, rhs, quantities_dict)
         elif "volume" in rhs.lower():
-            return self._solve_inverse_volume(unknown_name, quantities_dict)
+            return self._solve_inverse_volume(unknown_name, rhs, quantities_dict)
 
         return None
 
-    def _solve_inverse_area(self, unknown: str,
+    def _solve_inverse_area(self, unknown: str, formula: str,
                             quantities_dict: Dict[str, Quantity]) -> Optional[Dict[str, float]]:
         """Solve for dimension given area constraint."""
         # Find area constraint value
@@ -194,14 +199,18 @@ class GeometrySolver(SolverBase):
             return None
 
         # Simple inverse formulas for common cases
-        if unknown in ("radius", "r"):
+        if unknown == "radius":
             # A = πr² → r = √(A/π)
-            result_value = math.sqrt(constraint_value / math.pi)
-            return {unknown: result_value}
+            radius = math.sqrt(constraint_value / math.pi)
+            return {"radius": radius}
+        elif unknown == "r":
+            # A = πr² → r = √(A/π)
+            r = math.sqrt(constraint_value / math.pi)
+            return {"r": r}
 
         return None
 
-    def _solve_inverse_volume(self, unknown: str,
+    def _solve_inverse_volume(self, unknown: str, formula: str,
                               quantities_dict: Dict[str, Quantity]) -> Optional[Dict[str, float]]:
         """Solve for dimension given volume constraint."""
         # Find volume constraint value

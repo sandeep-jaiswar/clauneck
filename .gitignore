@@ -36,6 +36,7 @@ Thumbs.db
 .claude/settings.local.json*
 .claude/.env
 .env
+.clauneck/run/
 
 # Include CLAUDE.md and skills (needed for AI-Native SDLC)
 # Patterns below remove the blanket exclusions above

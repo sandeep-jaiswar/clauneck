@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,19 +37,8 @@ public class ClaudeTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeTranslator.class);
 
-    private static final Set<String> SUPPORTED_DOMAINS = new HashSet<>(java.util.Arrays.asList(
-            "physics.mechanics",
-            "mathematics.algebra",
-            "mathematics.calculus",
-            "mathematics.linear_algebra",
-            "mathematics.statistics",
-            "mathematics.trigonometry",
-            "mathematics.number_theory",
-            "mathematics.geometry",
-            "mathematics.optimization",
-            "mathematics.complex_numbers",
-            "mathematics.ode"
-    ));
+    private static final Set<String> SUPPORTED_DOMAINS = Set.of(
+            "physics.mechanics", "mathematics.statistics");
 
     private static final String SYSTEM_PROMPT = """
             You are a scientific model translator for the Clauneck platform.
@@ -59,7 +47,7 @@ public class ClaudeTranslator {
 
             CRITICAL CONSTRAINTS:
             1. Output ONLY valid JSON matching the schema below. No preamble, no explanation, no markdown code fences.
-            2. Supported domains: physics.mechanics, mathematics.algebra, mathematics.calculus, mathematics.linear_algebra, mathematics.statistics, mathematics.trigonometry, mathematics.number_theory, mathematics.geometry, mathematics.optimization, mathematics.complex_numbers, mathematics.ode.
+            2. Supported domains: physics.mechanics, mathematics.statistics.
             3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.) or domain-specific units (e.g., "dimensionless", "rad", "deg").
             4. When unit information is missing, use "dimensionless" as the default unit.
 
@@ -89,83 +77,14 @@ public class ClaudeTranslator {
               "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0, "end": 5, "numPoints": 1000}}
             }
 
-            === mathematics.algebra ===
-            Solve equations for unknowns (linear, polynomial, or general equations).
-            Quantities: each variable, with known values or isKnown=false for unknowns.
-            Equations: one or more algebraic equations (each lhs and rhs are symbolic expressions).
-            solver.timeSpan: not required.
-            Example: solve x^2 - 5*x + 6 = 0 for x.
-            {
-              "id": "algebra-1",
-              "domain": "mathematics.algebra",
-              "description": "Solve quadratic equation",
-              "quantities": [
-                {"name": "x", "siUnit": "dimensionless", "isKnown": false}
-              ],
-              "equations": [
-                {"lhs": "x**2 - 5*x + 6", "rhs": "0", "type": "algebraic"}
-              ],
-              "initialConditions": {},
-              "solver": {"method": "symbolic_solve", "tolerance": 1e-6}
-            }
-
-            === mathematics.calculus ===
-            Symbolic derivative, integral, or limit of an expression.
-            Quantities: the variable, and any parameters.
-            Equations: the expression (lhs) to differentiate/integrate/take-limit-of, and the variable (rhs).
-            solver.timeSpan: not required.
-            Example: compute derivative of sin(x) w.r.t. x.
-
-            === mathematics.linear_algebra ===
-            Matrix operations: determinant, eigenvalues, solve Ax=b.
-            Quantities: can include vector/matrix values (arrays or nested arrays).
-            Equations: symbolic matrix expressions.
-            solver.timeSpan: not required.
-            Example: solve 2x + 3y = 8; x + y = 3.
-
             === mathematics.statistics ===
             Descriptive stats, distributions, hypothesis tests over datasets.
             Quantities: the dataset (array value), distribution parameters.
-            Equations: stat operation or test name.
+            Equations: put exactly one supported operation call in rhs, such as mean(data),
+            normal_pdf(x, mu, sigma), or ttest_1samp(data, null_hypothesis).
             solver.timeSpan: not required.
-            Example: compute mean and standard deviation of [1, 2, 3, 4, 5].
-
-            === mathematics.trigonometry ===
-            Evaluate or solve trigonometric expressions and identities.
-            Quantities: angles, sides (in appropriate units).
-            Equations: trig equations or law-of-sines/cosines.
-            solver.timeSpan: not required.
-
-            === mathematics.number_theory ===
-            GCD, LCM, prime factorization, permutations (nPr), combinations (nCr).
-            Quantities: integers.
-            Equations: operation or formula (e.g., "gcd(a, b)", "nCr(n, r)").
-            solver.timeSpan: not required.
-
-            === mathematics.geometry ===
-            Area, perimeter, volume, solve for unknown dimensions.
-            Quantities: shape parameters (radius, height, etc.).
-            Equations: area/volume formula or constraint.
-            solver.timeSpan: not required.
-
-            === mathematics.optimization ===
-            Minimize/maximize functions, solve constrained or unconstrained optimization.
-            Quantities: variables and bounds.
-            Equations: objective function and optional constraints.
-            solver.timeSpan: not required.
-
-            === mathematics.complex_numbers ===
-            Arithmetic, modulus, argument, polar/rectangular conversion, roots of complex numbers.
-            Quantities: complex numbers or their components.
-            Equations: operation or formula.
-            solver.timeSpan: not required.
-
-            === mathematics.ode ===
-            Solve general ODEs (not hardcoded physics; arbitrary RHS).
-            Quantities: dependent and independent variables, initial conditions.
-            Equations: ODE(s) in the form "dy/dt" (lhs) = "<expression>" (rhs).
-            solver.timeSpan: required (time bounds for integration).
-            Example: dy/dt = -2*y, y(0) = 1.
+            Example quantities: [{"name": "data", "value": [1, 2, 3, 4, 5],
+            "siUnit": "dimensionless", "isKnown": true}].
 
             GENERAL VALIDATION RULES:
             - isKnown must be true exactly when value is present.
@@ -298,7 +217,9 @@ public class ClaudeTranslator {
         }
 
         List<String> validationErrors = new ArrayList<>(schemaValidator.validate(node));
-        validatePhysicsParameters(model, validationErrors);
+        if ("physics.mechanics".equals(model.getDomain())) {
+            validatePhysicsParameters(model, validationErrors);
+        }
         if (!validationErrors.isEmpty()) {
             throw new ModelValidationException(validationErrors);
         }
@@ -361,7 +282,10 @@ public class ClaudeTranslator {
             return initialConditions.get(name);
         }
         Quantity quantity = quantities.get(name);
-        return quantity != null && quantity.getValue() != null ? quantity.getValue() : defaultValue;
+        if (quantity == null || quantity.getValue() == null) {
+            return defaultValue;
+        }
+        return quantity.getValue() instanceof Number number ? number.doubleValue() : null;
     }
 
     private void validateGreaterThanZero(String name, Double value, List<String> validationErrors) {

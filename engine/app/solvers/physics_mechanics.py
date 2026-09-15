@@ -114,18 +114,16 @@ class ProjectileMotionSolver(SolverBase):
                 "vy": sol.y[3].tolist(),
             }
 
-            # Calculate summary statistics
-            # Find range (max x when y returns to 0, or max x in trajectory)
-            valid_indices = np.where(sol.y[1] >= 0)[0]
-            if len(valid_indices) > 0:
-                max_range_idx = np.argmax(sol.y[0][valid_indices])
-                max_range = float(sol.y[0][valid_indices][max_range_idx])
-                max_height = float(np.max(sol.y[1]))
-                flight_time = float(sol.t[valid_indices[-1]])
+            # Event values provide the actual impact rather than the last t_eval
+            # sample. Keep the trajectory itself on the requested t_eval grid.
+            if sol.t_events[0].size:
+                flight_time = float(sol.t_events[0][0])
+                max_range = float(sol.y_events[0][0][0])
             else:
-                max_range = float(np.max(sol.y[0]))
-                max_height = float(np.max(sol.y[1]))
                 flight_time = float(sol.t[-1])
+                max_range = float(sol.y[0, -1])
+
+            max_height = float(np.max(sol.y[1]))
 
             summary = {
                 "max_range": max_range,
