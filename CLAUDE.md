@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Modules
 - **core** (Java): UnitSystem, dimensional analysis, schema validation
 - **web** (Java, Spring Boot 3.2.2): API gateway, translator client, engine orchestration
-- **engine-python** (Python, FastAPI): Symbolic + numeric solving (SymPy, SciPy)
+- **engine** (Python, FastAPI): Symbolic + numeric solving (SymPy, SciPy)
 - **api** (Java): Reserved for future use
 - **schemas**: JSON Schema contract shared across Java + Python
 
@@ -48,10 +48,10 @@ gradle tasks              # List all available tasks
 
 ### Python / Engine
 ```bash
-cd engine-python && python -m pip install -e .                    # Install engine + deps
-cd engine-python && python -m pip install -e ".[dev]"             # Install with test deps
-cd engine-python && python -m pytest tests/ -v                    # Run projectile motion tests
-cd engine-python && python -m uvicorn app.main:app --port 8001    # Start FastAPI service
+cd engine && python -m pip install -e .                    # Install engine + deps
+cd engine && python -m pip install -e ".[dev]"             # Install with test deps
+cd engine && python -m pytest tests/ -v                    # Run projectile motion tests
+cd engine && python -m uvicorn app.main:app --port 8001    # Start FastAPI service
 ```
 
 ### Polyglot Notes
@@ -73,7 +73,7 @@ clauneck/
 │   │   └── validation/               # DimensionalAnalyzer
 │   ├── src/test/java/.../            # Dimension, Unit, Analyzer tests
 │   └── build.gradle
-├── engine-python/                    # Python: SymPy + SciPy solver
+├── engine/                           # Python: SymPy + SciPy solver
 │   ├── app/
 │   │   ├── main.py                  # FastAPI /api/solve endpoint
 │   │   ├── model.py                 # Pydantic models (from schema)
@@ -103,8 +103,8 @@ clauneck/
 - `core/src/main/java/com/clauneck/core/validation/`: Schema validation
 
 **Engine (Python)**
-- `engine-python/app/solver.py`: ProjectileMotionSolver (vertical slice), GeneralSolver (extensible)
-- `engine-python/app/model.py`: Pydantic models matching JSON Schema
+- `engine/app/solver.py`: ProjectileMotionSolver (vertical slice), GeneralSolver (extensible)
+- `engine/app/model.py`: Pydantic models matching JSON Schema
 
 **Documentation**
 - `docs/architecture.md`: System overview, layers, vertical slice example

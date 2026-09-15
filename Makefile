@@ -6,7 +6,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make build          Build all modules (Java + Python)"
 	@echo "  make test           Run all tests (Java + Python)"
-	@echo "  make run            Start services (engine-python + web spring boot)"
+	@echo "  make run            Start services (engine + web spring boot)"
 	@echo "  make clean          Clean all build artifacts"
 	@echo "  make engine-build   Build Python engine only"
 	@echo "  make engine-test    Test Python engine only"
@@ -38,13 +38,13 @@ core-test:
 # Python engine targets
 engine-build:
 	@echo "Building Python engine..."
-	cd engine-python && python -m pip install -e . > /dev/null 2>&1
+	cd engine && python -m pip install -e . > /dev/null 2>&1
 	@echo "✓ Engine installed"
 
 engine-test:
 	@echo "Testing Python engine..."
-	cd engine-python && python -m pip install -e ".[dev]" > /dev/null 2>&1
-	cd engine-python && python -m pytest tests/ -v
+	cd engine && python -m pip install -e ".[dev]" > /dev/null 2>&1
+	cd engine && python -m pytest tests/ -v
 
 # Run targets
 run: engine-run-bg
@@ -55,7 +55,7 @@ run: engine-run-bg
 
 engine-run-bg:
 	@echo "Starting Python engine (background)..."
-	cd engine-python && python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 > /tmp/engine.log 2>&1 &
+	cd engine && python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 > /tmp/engine.log 2>&1 &
 	@sleep 1
 	@echo "✓ Engine started (PID logged)"
 
