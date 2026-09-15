@@ -1,0 +1,28 @@
+=== mathematics.discrete_math ===
+Discrete mathematics: set operations, recurrence relations, combinatorics, Boolean algebra.
+
+Quantities: sets (arrays of elements), integers for indices, initial conditions for sequences, parameters for recurrences.
+
+Supported operations:
+1. set_union(set_a, set_b) -> list of union elements
+2. set_intersection(set_a, set_b) -> list of intersection elements
+3. set_complement(universal_set, set_a) -> list of complement elements
+4. set_symmetric_difference(set_a, set_b) -> list of symmetric difference elements
+5. power_set(set_a) -> list of all subsets
+6. linear_recurrence_1st_order(a, b, f0, n) -> F(n) where F(n)=a*F(n-1)+b, F(0)=f0
+7. linear_recurrence_2nd_order(a, b, f0, f1, n) -> F(n) where F(n)=a*F(n-1)+b*F(n-2), F(0)=f0, F(1)=f1
+8. non_homogeneous_recurrence(a, b, f0, f1, n, forcing_func) -> F(n) with forcing function g(n)
+9. inclusion_exclusion(set_sizes, intersection_sizes) -> size of union by inclusion-exclusion
+10. stirling_number_1st(n, k) -> s(n,k), Stirling number of first kind
+11. stirling_number_2nd(n, k) -> S(n,k), Stirling number of second kind
+12. partition_function(n, k) -> p(n) or p(n,k) if k provided
+13. boolean_algebra(value_a, value_b, operation) -> result of AND/OR/XOR/NOT
+
+Solver method: SYMBOLIC_SOLVE (pure function evaluation for most operations).
+
+Examples:
+- Set operations: "What is the union of {1,2,3} and {2,3,4}?"
+- Recurrence: "Solve the Fibonacci sequence F(n)=F(n-1)+F(n-2) for n=10, F(0)=0, F(1)=1"
+- Combinatorics: "How many partitions of 5 are there?" -> partition_function(5)
+- Stirling numbers: "S(4,2) = ?" -> stirling_number_2nd(4, 2) = 7 (partitions into 2 non-empty subsets)
+- Boolean: "What is (1 AND 0)?" -> boolean_algebra(1, 0, "AND") = 0
