@@ -1,0 +1,3 @@
+rootProject.name = 'clauneck'
+
+include 'core', 'web', 'api'
