@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+clauneck:
+  translator:
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${CLAUDE_MODEL:claude-haiku-4-5}
+    api-url: ${ANTHROPIC_API_URL:https://api.anthropic.com/v1/messages}
+    anthropic-version: "2023-06-01"
+    timeout-seconds: 30
+    max-retries: 2
+    max-tokens: 2048
+  engine:
+    url: ${CLAUNECK_ENGINE_URL:http://localhost:8001}
+    timeout-seconds: 30
+
+logging:
+  level:
+    com.clauneck: INFO

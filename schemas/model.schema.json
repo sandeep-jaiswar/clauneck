@@ -103,16 +103,8 @@
     },
     "initialConditions": {
       "type": "object",
-      "description": "Values at t=0 (for ODEs)",
-      "properties": {
-        "time": { "type": "number", "description": "Initial time" },
-        "values": {
-          "type": "object",
-          "additionalProperties": { "type": "number" },
-          "description": "Variable name -> value at t=0"
-        }
-      },
-      "additionalProperties": false
+      "description": "Initial values for variables at t=0 (flat map: variable name -> value)",
+      "additionalProperties": { "type": "number" }
     },
     "boundaryConditions": {
       "type": "array",

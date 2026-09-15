@@ -10,16 +10,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Modules
 - **core** (Java): UnitSystem, dimensional analysis, schema validation
-- **web** (Java, Spring Boot 3.2.2): API gateway, translator client, engine orchestration
+- **web** (Java, Spring Boot 3.2.2): API gateway, translator layer, engine orchestration
 - **engine** (Python, FastAPI): Symbolic + numeric solving (SymPy, SciPy)
 - **api** (Java): Reserved for future use
 - **schemas**: JSON Schema contract shared across Java + Python
 
 ### Technology Stack
-- **Java**: 21, Gradle 4.4.1, Spring Boot 3.2.2, JUnit 5
+- **Java**: 21, Gradle (wrapper pinned to 8.10), Spring Boot 3.2.2, JUnit 5
 - **Python**: 3.10+, FastAPI, SymPy, NumPy, SciPy
-- **Schema**: JSON Schema (models/model.schema.json)
+- **Schema**: JSON Schema (schemas/model.schema.json)
 - **CI/CD**: GitHub Actions (on push/PR to production)
+- **HTTP Client**: RestTemplate (Spring Boot), direct Anthropic API calls
 
 ### Key Design Decisions
 See `docs/adr/` for full rationale:
@@ -37,13 +38,22 @@ make clean                # Clean all build artifacts
 ```
 
 ### Java / Gradle
+Use the included Gradle Wrapper (Java 21 required):
 ```bash
-gradle build              # Build all Java modules and run tests
-gradle build -x test      # Build without running tests
-gradle clean              # Clean (.gradle, build/)
-gradle :core:test         # Test core module (dimensional analysis, unit system)
-gradle :web:test          # Test web module
-gradle tasks              # List all available tasks
+./gradlew build              # Build all Java modules and run tests
+./gradlew build -x test      # Build without running tests
+./gradlew clean              # Clean (.gradle, build/)
+./gradlew :core:test         # Test core module (dimensional analysis, unit system)
+./gradlew :web:test          # Test web module (translator, engine client, controller)
+./gradlew :web:bootRun       # Start the Spring Boot API gateway on :8080 (requires ANTHROPIC_API_KEY)
+./gradlew tasks              # List all available tasks
+```
+
+Environment setup for translator layer:
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."  # Required for Claude API calls
+export CLAUDE_MODEL="claude-haiku-4-5"  # Optional, defaults to Haiku
+export CLAUNECK_ENGINE_URL="http://localhost:8001"  # Optional, defaults to localhost:8001
 ```
 
 ### Python / Engine
@@ -199,9 +209,11 @@ All skills follow these patterns:
 ### Layer 1: Schema (`schemas/model.schema.json`)
 Language-agnostic JSON Schema for scientific models. Both Java and Python validate against this — no duplication.
 
-### Layer 2: Translator (web module, to be implemented)
-- Claude API integration: natural language → validated Model JSON
-- Endpoint: `POST /api/prototype`
+### Layer 2: Translator (web module, implemented)
+- `com.clauneck.web.service.ClaudeTranslator`: builds domain-specific prompt, calls Anthropic API directly via `RestTemplate`, parses/validates JSON
+- `com.clauneck.web.service.SchemaValidator`: validates against `schemas/model.schema.json` using `com.networknt:json-schema-validator`
+- `com.clauneck.web.api.PrototypeController`: REST endpoint `POST /api/prototype` (accepts natural-language query, returns Model + SolverResult)
+- Configuration: `clauneck.translator.*` in `application.yml`, driven by `ANTHROPIC_API_KEY` / `CLAUDE_MODEL` / `CLAUNECK_ENGINE_URL` env vars
 - Key: LLM never touches computation, only translation
 
 ### Layer 3: Validator (core module)
@@ -215,10 +227,12 @@ Language-agnostic JSON Schema for scientific models. Both Java and Python valida
 - Deterministic: SymPy + SciPy with pinned versions, explicit solver config
 - Exposed as FastAPI microservice (`POST /api/solve`)
 
-### Layer 5: API Gateway (web module, to be completed)
-- Orchestrates translator → validator → engine
-- Returns complete response: Model + Results
+### Layer 5: API Gateway (web module, implemented)
+- `com.clauneck.web.api.PrototypeController` orchestrates: translator → engine
+- `com.clauneck.web.client.EngineClient`: POSTs to `${clauneck.engine.url}/api/solve`
+- Returns complete response: Model + SolverResult
 - Endpoint: `POST /api/prototype`
+- Error handling via `com.clauneck.web.exception.PrototypeExceptionHandler`: maps to 400/501/502/503
 
 ## Determinism & Reproducibility
 
@@ -255,10 +269,10 @@ Language-agnostic JSON Schema for scientific models. Both Java and Python valida
 
 ## Notes for Future Development
 
-- **Vertical slice complete**: Projectile motion (physics.mechanics) works end-to-end
-- **Next slice**: Implement Translator layer (Claude integration) + PrototypeController + full API orchestration
-- **Third slice**: Second domain (chemistry.kinetics) to validate schema generalization
-- **CI/CD update needed**: Add Python test stage to `.github/workflows/ci.yml` once engine stabilizes
-- **Performance**: Engine runs as persistent FastAPI service (not per-request) to avoid startup overhead
+- **Vertical slice complete**: Projectile motion (physics.mechanics) works end-to-end, including the translator layer — `POST /api/prototype` takes a natural-language query and returns Model + SolverResult
+- **Next slice**: Second domain (chemistry.kinetics) to validate schema generalization
+- **CI/CD update needed**: Add Python test stage and `ANTHROPIC_API_KEY` secret to `.github/workflows/ci.yml` once engine stabilizes; use `./gradlew` (not system `gradle`)
+- **Performance**: Engine runs as persistent FastAPI service (not per-request) to avoid startup overhead; translator uses configurable Haiku by default for latency
+- **Follow-up**: Review schema completeness (all valid enum values, constraint coverage) and add more test domains
 - **Maintain `CLAUDE.md`**: Update when new patterns emerge or build commands change
 - **Skills**: Stored in `.claude/skills/`; add domain-specific patterns as they're discovered
