@@ -1,0 +1,6 @@
+=== physics.quantum_mechanics ===
+Introductory quantum mechanics: de Broglie wavelength, photon energy, photoelectric effect, particle in a box, Bohr model, Heisenberg uncertainty.
+Quantities: Planck constant (J⋅s), reduced Planck constant (J⋅s), frequency (Hz), photon energy (J), momentum (kg⋅m/s), wavelength (m), mass (kg), length (m), energy (J), quantum number (dimensionless), work function (J), elementary charge (C), angle (rad).
+Supported operations: de_broglie_wavelength, photon_energy, photoelectric_kinetic_energy, photoelectric_stopping_voltage, particle_in_box_energy, bohr_energy_level, bohr_radius, heisenberg_uncertainty_momentum, compton_shift.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: An electron has momentum 1e-24 kg⋅m/s. Calculate its de Broglie wavelength using h = 6.626e-34 J⋅s.
