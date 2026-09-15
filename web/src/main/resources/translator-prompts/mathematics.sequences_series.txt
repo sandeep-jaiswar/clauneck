@@ -1,0 +1,84 @@
+=== mathematics.sequences_series ===
+Arithmetic, geometric, harmonic series; convergence tests; Taylor/Fourier series expansions.
+Quantities: series parameters (first term, ratio/difference, number of terms, function expressions).
+Equations: put exactly one supported operation call in rhs.
+Supported operations: arithmetic_sum, geometric_sum, harmonic_sum, ratio_test, root_test, integral_test, alternating_series_test, power_series_convergence, taylor_series, maclaurin_series, fourier_sine_series, fourier_cosine_series, fourier_complex_series, generating_function, series_convergence_radius, nth_term.
+solver.timeSpan: not required.
+Example 1 (Arithmetic Series Sum):
+{
+  "id": "seq-arithmetic-example",
+  "domain": "mathematics.sequences_series",
+  "description": "Sum of arithmetic series with a1=1, d=2, n=10",
+  "quantities": [
+    {"name": "a1", "value": 1.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "d", "value": 2.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "n", "value": 10.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "sum_result", "rhs": "arithmetic_sum(a1, d, n)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
+
+Example 2 (Taylor Series Expansion):
+{
+  "id": "seq-taylor-example",
+  "domain": "mathematics.sequences_series",
+  "description": "Taylor series for exp(x) around x=0 with 6 terms",
+  "quantities": [],
+  "equations": [
+    {"lhs": "taylor_coeffs", "rhs": "taylor_series(exp(x), x, 0, 6)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
+
+Example 3 (Convergence Test):
+{
+  "id": "seq-ratio-test-example",
+  "domain": "mathematics.sequences_series",
+  "description": "Ratio test for series convergence",
+  "quantities": [
+    {"name": "a_n", "value": 0.0625, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "a_n_plus_1", "value": 0.03125, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "convergence_info", "rhs": "ratio_test(a_n, a_n_plus_1)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
+
+Example 4 (Fourier Series):
+{
+  "id": "seq-fourier-example",
+  "domain": "mathematics.sequences_series",
+  "description": "Fourier cosine series for f(x)=x on [0, pi] with 5 terms",
+  "quantities": [
+    {"name": "L", "value": 3.14159265359, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "fourier_coeffs", "rhs": "fourier_cosine_series(x, L, 5)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
+
+Operation Details:
+- arithmetic_sum(a1, d, n): Sum of n terms of arithmetic sequence starting at a1 with common difference d
+- geometric_sum(a, r, n): Sum of n terms of geometric sequence with first term a and ratio r
+- harmonic_sum(n): Partial sum of harmonic series H_n = 1 + 1/2 + ... + 1/n
+- ratio_test(a_n, a_n_plus_1): Convergence test using ratio lim|a_{n+1}/a_n|; returns limit and status
+- root_test(a_n, n): Convergence test using root lim|a_n|^(1/n); returns nth-root and status
+- integral_test(f_expr, a, b): Convergence via integral from a to b (use "1/n" for harmonic, "1/n**2" for p-series)
+- alternating_series_test(a_n, a_n_plus_1): Check if alternating series converges (decreasing terms)
+- power_series_convergence(x, radius): Check convergence of power series at point x with given radius
+- taylor_series(f, var, x0, n): Taylor expansion of f around x0 with n terms; returns coefficients
+- maclaurin_series(f, var, n): Maclaurin series (Taylor at x0=0) of f with n terms
+- fourier_sine_series(f, L, n): Fourier sine series coefficients b_n on [0,L] with n terms
+- fourier_cosine_series(f, L, n): Fourier cosine series a0 and a_n on [0,L] with n terms
+- fourier_complex_series(f, L, n): Complex exponential Fourier series on [-L,L] with n terms
+- generating_function(coefficients, x): Evaluate G(x) = sum(c_n * x^n) with coefficient list
+- series_convergence_radius(a_n, a_n_plus_1): Estimate radius of convergence R = 1/lim|a_{n+1}/a_n|
+- nth_term(a1, d_or_r, n, type): Compute nth term of arithmetic (d_or_r=d) or geometric (d_or_r=r) sequence
