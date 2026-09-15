@@ -1,0 +1,19 @@
+=== mathematics.geometry ===
+Geometric calculations: areas, volumes, distances, angles.
+Quantities: dimensions (lengths, radii, angles).
+Supported operations: circle_area(r), sphere_volume(r), triangle_area(base, height), 
+distance_2d(x1, y1, x2, y2), polygon_perimeter(side_lengths_vec).
+Example:
+{
+  "id": "geometry-circle",
+  "domain": "mathematics.geometry",
+  "description": "Area of circle with radius 5m",
+  "quantities": [
+    {"name": "r", "value": 5.0, "siUnit": "m", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "area", "rhs": "circle_area(r)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

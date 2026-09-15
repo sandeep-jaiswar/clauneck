@@ -78,7 +78,16 @@
       "Bash(/media/sandeep/DataDrive2/clauneck/engine/.venv/bin/python -m pytest /media/sandeep/DataDrive2/clauneck/.claude/worktrees/agent-a55ed4893cd8bd6d3/engine/tests/test_complex_numbers.py -v 2>&1 | tail -50)",
       "Bash(/media/sandeep/DataDrive2/clauneck/engine/.venv/bin/python -m pytest /media/sandeep/DataDrive2/clauneck/.claude/worktrees/agent-a55ed4893cd8bd6d3/engine/tests/test_projectile.py -v 2>&1 | tail -40)",
       "Bash(cat)",
-      "Bash(/tmp/merge_solvers.sh)"
+      "Bash(/tmp/merge_solvers.sh)",
+      "Bash(/tmp/create_solver_prs.sh)",
+      "Bash(git branch *)",
+      "Bash(/tmp/create_remaining_prs.sh)",
+      "Bash(/tmp/create_individual_solver_branches.sh)",
+      "Read(//tmp/**)",
+      "Bash(git stash *)",
+      "Bash(git merge *)",
+      "Bash(xargs -I{} sh -c 'echo ---{}---; cat {}')",
+      "Bash(./gradlew :web:test -x :web:bootRun)"
     ],
     "ask": [
       "Bash(git push *)",

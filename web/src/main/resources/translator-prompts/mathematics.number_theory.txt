@@ -1,0 +1,19 @@
+=== mathematics.number_theory ===
+Number theory operations: GCD, LCM, prime factorization, modular arithmetic.
+Quantities: integers and parameters.
+Supported operations: gcd(a, b), lcm(a, b), is_prime(n), prime_factors(n), modular_power(base, exp, mod).
+Example:
+{
+  "id": "number_theory-gcd",
+  "domain": "mathematics.number_theory",
+  "description": "GCD of 48 and 18",
+  "quantities": [
+    {"name": "a", "value": 48.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "b", "value": 18.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "result", "rhs": "gcd(a, b)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

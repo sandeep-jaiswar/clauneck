@@ -1,0 +1,21 @@
+=== mathematics.ode ===
+Ordinary differential equation solving.
+Equations: specify ODE in the form d^n/dt^n[y] = rhs(t, y, dy/dt, ...).
+solver.timeSpan: required, specifies integration interval.
+Supported solver methods: RK45, RK23, DOP853 for numerical integration.
+Example:
+{
+  "id": "ode-logistic",
+  "domain": "mathematics.ode",
+  "description": "Logistic growth: dy/dt = r*y*(1 - y/K)",
+  "quantities": [
+    {"name": "y", "value": 1.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "r", "value": 0.5, "siUnit": "1/s", "isKnown": true},
+    {"name": "K", "value": 100.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "dy/dt", "rhs": "r*y*(1 - y/K)", "type": "ode"}
+  ],
+  "initialConditions": {"y": 1.0},
+  "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0, "end": 10, "numPoints": 1000}}
+}

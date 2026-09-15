@@ -121,13 +121,14 @@ class ClaudeTranslatorTest {
     }
 
     @Test
-    void unregisteredMathematicsDomainIsRejected() {
+    void algebraDomainIsNowSupported() {
         String algebraModel = VALID_MODEL_JSON.replace("physics.mechanics", "mathematics.algebra");
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
                 .thenReturn(responseWithText(algebraModel));
 
-        assertThrows(UnsupportedDomainException.class,
-                () -> translator.translate("Solve an algebra equation"));
+        ScientificModelDto model = translator.translate("Solve an algebra equation");
+
+        assertEquals("mathematics.algebra", model.getDomain());
     }
 
     @Test
@@ -198,12 +199,12 @@ class ClaudeTranslatorTest {
 
     @Test
     void unsupportedDomainThrowsUnsupportedDomainException() {
-        String chemistryModel = VALID_MODEL_JSON.replace("physics.mechanics", "chemistry.kinetics");
+        String fictionalModel = VALID_MODEL_JSON.replace("physics.mechanics", "physics.fictional_domain");
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
-                .thenReturn(responseWithText(chemistryModel));
+                .thenReturn(responseWithText(fictionalModel));
 
         assertThrows(UnsupportedDomainException.class,
-                () -> translator.translate("Reaction rate of X"));
+                () -> translator.translate("Query about fictional domain"));
     }
 
     @Test

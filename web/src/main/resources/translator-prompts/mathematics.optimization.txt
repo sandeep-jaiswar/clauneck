@@ -1,0 +1,20 @@
+=== mathematics.optimization ===
+Optimization: minimization, maximization, root finding, constrained optimization.
+Quantities: decision variables (unknowns) and parameters (knowns).
+Equations: first equation is objective, remainder are constraints.
+Supported operations: minimize, maximize (via lhs tag), fsolve for root finding, symbolic_solve for exact solutions.
+Example:
+{
+  "id": "opt-minimize",
+  "domain": "mathematics.optimization",
+  "description": "Minimize x^2 + y^2",
+  "quantities": [
+    {"name": "x", "value": null, "siUnit": "dimensionless", "isKnown": false},
+    {"name": "y", "value": null, "siUnit": "dimensionless", "isKnown": false}
+  ],
+  "equations": [
+    {"lhs": "min", "rhs": "x**2 + y**2", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "RK45", "tolerance": 1e-6}
+}

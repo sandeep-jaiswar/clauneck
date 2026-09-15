@@ -1,0 +1,18 @@
+=== mathematics.calculus ===
+Derivatives, integrals, limits, series expansions.
+Equations: specify the expression to differentiate or integrate.
+Operations: derivative(expr, var), integral(expr, var), taylor_series(expr, var, order, point).
+Example:
+{
+  "id": "calc-derivative",
+  "domain": "mathematics.calculus",
+  "description": "Derivative of x^3 with respect to x",
+  "quantities": [
+    {"name": "x", "value": 2.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "df_dx", "rhs": "derivative(x**3, x)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

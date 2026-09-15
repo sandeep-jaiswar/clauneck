@@ -1,0 +1,22 @@
+=== mathematics.algebra ===
+Algebraic equation solving, root finding, polynomial operations.
+Equations: put one or more equations to solve. Use symbolic_solve method for exact solutions.
+Quantities: coefficients and variables for algebraic expressions.
+Supported operations: solve for unknowns via symbolic solving or numerical root finding.
+Example:
+{
+  "id": "algebra-quadratic",
+  "domain": "mathematics.algebra",
+  "description": "Solve quadratic equation x^2 - 5*x + 6 = 0",
+  "quantities": [
+    {"name": "a", "value": 1.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "b", "value": -5.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "c", "value": 6.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "x", "value": null, "siUnit": "dimensionless", "isKnown": false}
+  ],
+  "equations": [
+    {"lhs": "x^2 + b*x + c", "rhs": "0", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

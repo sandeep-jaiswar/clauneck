@@ -10,14 +10,22 @@ import com.clauneck.web.exception.UnsupportedDomainException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,76 +36,84 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Translates a natural-language physics query into a schema-validated
- * ScientificModelDto, per spec.md's "Prompt Design" section and ADR 0002
- * (LLM does translation only, never computation).
+ * Translates a natural-language query into a schema-validated ScientificModelDto.
+ * Loads domain-specific prompt fragments from translator-prompts/*.txt files at startup.
+ * Per spec.md and ADR 0002: LLM does translation only, never computation.
  */
 @Service
 public class ClaudeTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeTranslator.class);
 
-    private static final Set<String> SUPPORTED_DOMAINS = Set.of(
-            "physics.mechanics", "mathematics.statistics");
+    private static final Map<String, String> DOMAIN_PROMPTS = loadDomainPrompts();
+    private static final Set<String> SUPPORTED_DOMAINS =
+            Collections.unmodifiableSet(DOMAIN_PROMPTS.keySet());
+    private static final String SYSTEM_PROMPT = buildSystemPrompt();
 
-    private static final String SYSTEM_PROMPT = """
-            You are a scientific model translator for the Clauneck platform.
-
-            Your role: Convert natural language scientific and mathematical problems into structured Model JSON.
-
-            CRITICAL CONSTRAINTS:
-            1. Output ONLY valid JSON matching the schema below. No preamble, no explanation, no markdown code fences.
-            2. Supported domains: physics.mechanics, mathematics.statistics.
-            3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.) or domain-specific units (e.g., "dimensionless", "rad", "deg").
-            4. When unit information is missing, use "dimensionless" as the default unit.
-
-            DOMAIN-SPECIFIC STRUCTURE:
-
-            === physics.mechanics (projectile motion) ===
-            Quantities: v0 (m/s), angle (deg or rad), mass (kg), g (m/s^2), drag_coeff (dimensionless).
-            Equations: d2x/dt2 (ode), d2y/dt2 (ode).
-            solver.timeSpan: required for time-dependent solve.
-            Example:
-            {
-              "id": "projectile-1",
-              "domain": "physics.mechanics",
-              "description": "Projectile motion without drag",
-              "quantities": [
-                {"name": "v0", "value": 20.0, "siUnit": "m/s", "isKnown": true},
-                {"name": "angle", "value": 45.0, "siUnit": "deg", "isKnown": true},
-                {"name": "mass", "value": 1.0, "siUnit": "kg", "isKnown": true},
-                {"name": "g", "value": 9.81, "siUnit": "m/s^2", "isKnown": true},
-                {"name": "drag_coeff", "value": 0.0, "siUnit": "dimensionless", "isKnown": true}
-              ],
-              "equations": [
-                {"lhs": "d2x/dt2", "rhs": "0", "type": "ode"},
-                {"lhs": "d2y/dt2", "rhs": "-g", "type": "ode"}
-              ],
-              "initialConditions": {},
-              "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0, "end": 5, "numPoints": 1000}}
+    private static Map<String, String> loadDomainPrompts() {
+        Map<String, String> prompts = new TreeMap<>();  // Alphabetical iteration
+        try {
+            ClassPathResource resource = new ClassPathResource("translator-prompts");
+            // Load all .txt files from classpath
+            var files = Files.list(Paths.get(resource.getURI()))
+                    .filter(p -> p.toString().endsWith(".txt"))
+                    .collect(Collectors.toList());
+            
+            for (var path : files) {
+                String filename = path.getFileName().toString();
+                String domain = filename.replace(".txt", "");
+                String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+                prompts.put(domain, content);
+                log.debug("Loaded prompt for domain: {}", domain);
             }
+        } catch (Exception e) {
+            log.error("Failed to load domain prompts from classpath", e);
+            // Fallback: provide empty map (will be caught by validation)
+        }
+        return prompts;
+    }
 
-            === mathematics.statistics ===
-            Descriptive stats, distributions, hypothesis tests over datasets.
-            Quantities: the dataset (array value), distribution parameters.
-            Equations: put exactly one supported operation call in rhs, such as mean(data),
-            normal_pdf(x, mu, sigma), or ttest_1samp(data, null_hypothesis).
-            solver.timeSpan: not required.
-            Example quantities: [{"name": "data", "value": [1, 2, 3, 4, 5],
-            "siUnit": "dimensionless", "isKnown": true}].
+    private static String buildSystemPrompt() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
+                You are a scientific model translator for the Clauneck platform.
 
-            GENERAL VALIDATION RULES:
-            - isKnown must be true exactly when value is present.
-            - For time-dependent problems (ODE, physics.mechanics), provide solver.timeSpan.
-            - Unknown/unsupported domains: output error JSON instead.
+                Your role: Convert natural language scientific and mathematical problems into structured Model JSON.
 
-            If the query is ambiguous, nonsensical, or outside supported domains, output:
-            {
-              "error": true,
-              "reason": "Explanation of why this query cannot be translated",
-              "suggestion": "What the user should ask instead"
-            }
-            """;
+                CRITICAL CONSTRAINTS:
+                1. Output ONLY valid JSON matching the schema below. No preamble, no explanation, no markdown code fences.
+                2. Supported domains: """);
+        sb.append(String.join(", ", SUPPORTED_DOMAINS));
+        sb.append("""
+                .
+                3. All quantities must use SI units (m, kg, s, m/s, m/s^2, etc.) or domain-specific units (e.g., "dimensionless", "rad", "deg").
+                4. When unit information is missing, use "dimensionless" as the default unit.
+
+                DOMAIN-SPECIFIC STRUCTURE:
+
+                """);
+        
+        // Append all domain prompts in order
+        for (String domain : SUPPORTED_DOMAINS) {
+            sb.append(DOMAIN_PROMPTS.get(domain)).append("\n\n");
+        }
+        
+        sb.append("""
+                GENERAL VALIDATION RULES:
+                - isKnown must be true exactly when value is present.
+                - For time-dependent problems (ODE, physics.mechanics), provide solver.timeSpan.
+                - Unknown/unsupported domains: output error JSON instead.
+
+                If the query is ambiguous, nonsensical, or outside supported domains, output:
+                {
+                  "error": true,
+                  "reason": "Explanation of why this query cannot be translated",
+                  "suggestion": "What the user should ask instead"
+                }
+                """);
+        
+        return sb.toString();
+    }
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -122,9 +138,6 @@ public class ClaudeTranslator {
                 String rawOutput = callClaudeApi(query);
                 return parseAndValidate(rawOutput, query);
             } catch (TranslationException | UnsupportedDomainException | ModelValidationException e) {
-                // Claude responded; the response itself is the problem. Retrying with the
-                // exact same prompt won't help beyond parse failures, which are handled
-                // separately below — propagate immediately.
                 throw e;
             } catch (JsonParseUnusableException e) {
                 lastFailure = e;
@@ -178,7 +191,7 @@ public class ClaudeTranslator {
     }
 
     private String buildUserPrompt(String query) {
-        return "Translate this physics query into Model JSON:\n\n\"" + query + "\"\n\n"
+        return "Translate this query into Model JSON:\n\n\"" + query + "\"\n\n"
                 + "Output ONLY the JSON. No explanation.";
     }
 
@@ -213,7 +226,7 @@ public class ClaudeTranslator {
         }
 
         if (model.getDomain() == null || !SUPPORTED_DOMAINS.contains(model.getDomain())) {
-            throw new UnsupportedDomainException(model.getDomain());
+            throw new UnsupportedDomainException(model.getDomain(), SUPPORTED_DOMAINS);
         }
 
         List<String> validationErrors = new ArrayList<>(schemaValidator.validate(node));
@@ -224,7 +237,6 @@ public class ClaudeTranslator {
             throw new ModelValidationException(validationErrors);
         }
 
-        // Audit trail per ADR 0002: set server-side, don't trust the LLM to echo these back correctly.
         model.getMetadata().setSource("llm_translator");
         model.getMetadata().setOriginalQuery(originalQuery);
 
@@ -314,7 +326,6 @@ public class ClaudeTranslator {
         return trimmed;
     }
 
-    /** Internal signal that the model call needs a retry due to unusable output, not a real translation failure. */
     private static class JsonParseUnusableException extends RuntimeException {
         JsonParseUnusableException(String message) {
             super(message);

@@ -12,8 +12,17 @@
     "domain": {
       "type": "string",
       "enum": [
-        "physics.mechanics",
-        "mathematics.statistics"
+        "mathematics.algebra",
+        "mathematics.calculus",
+        "mathematics.complex_numbers",
+        "mathematics.geometry",
+        "mathematics.linear_algebra",
+        "mathematics.number_theory",
+        "mathematics.ode",
+        "mathematics.optimization",
+        "mathematics.statistics",
+        "mathematics.trigonometry",
+        "physics.mechanics"
       ],
       "description": "Domain classification for this model"
     },

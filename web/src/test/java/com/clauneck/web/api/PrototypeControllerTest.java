@@ -19,6 +19,7 @@ import com.clauneck.web.service.ClaudeTranslator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -92,8 +93,13 @@ class PrototypeControllerTest {
 
     @Test
     void unsupportedDomainReturns501() throws Exception {
+        Set<String> supportedDomains = Set.of(
+                "mathematics.algebra", "mathematics.calculus", "mathematics.complex_numbers",
+                "mathematics.geometry", "mathematics.linear_algebra", "mathematics.number_theory",
+                "mathematics.ode", "mathematics.optimization", "mathematics.statistics",
+                "mathematics.trigonometry", "physics.mechanics");
         when(translator.translate(anyString()))
-                .thenThrow(new UnsupportedDomainException("chemistry.kinetics"));
+                .thenThrow(new UnsupportedDomainException("chemistry.kinetics", supportedDomains));
 
         mockMvc.perform(post("/api/prototype")
                         .contentType(MediaType.APPLICATION_JSON)

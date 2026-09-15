@@ -1,0 +1,18 @@
+=== mathematics.trigonometry ===
+Trigonometric calculations: sines, cosines, tangents, inverse trig functions, angle conversions.
+Quantities: angles (in deg or rad), side lengths.
+Supported operations: sin(x), cos(x), tan(x), asin(x), acos(x), atan(x), deg_to_rad(angle), rad_to_deg(angle).
+Example:
+{
+  "id": "trig-sin",
+  "domain": "mathematics.trigonometry",
+  "description": "Sine of 30 degrees",
+  "quantities": [
+    {"name": "angle", "value": 30.0, "siUnit": "deg", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "sin_result", "rhs": "sin(angle)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

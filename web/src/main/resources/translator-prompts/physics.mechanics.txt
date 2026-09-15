@@ -1,0 +1,23 @@
+=== physics.mechanics (projectile motion) ===
+Quantities: v0 (m/s), angle (deg or rad), mass (kg), g (m/s^2), drag_coeff (dimensionless).
+Equations: d2x/dt2 (ode), d2y/dt2 (ode).
+solver.timeSpan: required for time-dependent solve.
+Example:
+{
+  "id": "projectile-1",
+  "domain": "physics.mechanics",
+  "description": "Projectile motion without drag",
+  "quantities": [
+    {"name": "v0", "value": 20.0, "siUnit": "m/s", "isKnown": true},
+    {"name": "angle", "value": 45.0, "siUnit": "deg", "isKnown": true},
+    {"name": "mass", "value": 1.0, "siUnit": "kg", "isKnown": true},
+    {"name": "g", "value": 9.81, "siUnit": "m/s^2", "isKnown": true},
+    {"name": "drag_coeff", "value": 0.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "d2x/dt2", "rhs": "0", "type": "ode"},
+    {"lhs": "d2y/dt2", "rhs": "-g", "type": "ode"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "RK45", "tolerance": 1e-6, "timeSpan": {"start": 0, "end": 5, "numPoints": 1000}}
+}

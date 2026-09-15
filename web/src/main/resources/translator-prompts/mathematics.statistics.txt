@@ -1,0 +1,22 @@
+=== mathematics.statistics ===
+Descriptive stats, distributions, hypothesis tests over datasets.
+Quantities: the dataset (array value), distribution parameters.
+Equations: put exactly one supported operation call in rhs, such as mean(data),
+normal_pdf(x, mu, sigma), or ttest_1samp(data, null_hypothesis).
+Supported operations: mean, median, mode, variance, stdev, quartiles, normal_pdf, normal_cdf,
+normal_quantile, binomial_pdf, binomial_cdf, poisson_pdf, poisson_cdf, ttest_1samp, chi2_gof.
+solver.timeSpan: not required.
+Example:
+{
+  "id": "stats-mean",
+  "domain": "mathematics.statistics",
+  "description": "Compute mean of dataset",
+  "quantities": [
+    {"name": "data", "value": [1.0, 2.0, 3.0, 4.0, 5.0], "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "mean_result", "rhs": "mean(data)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

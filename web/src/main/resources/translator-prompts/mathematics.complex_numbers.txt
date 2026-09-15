@@ -1,0 +1,19 @@
+=== mathematics.complex_numbers ===
+Operations on complex numbers: magnitude, phase, polar/rectangular conversions, arithmetic.
+Quantities: real and imaginary parts, or magnitude and angle.
+Supported operations: magnitude(real, imag), phase(real, imag), rectangular(mag, phase), polar_mult, polar_div.
+Example:
+{
+  "id": "complex-magnitude",
+  "domain": "mathematics.complex_numbers",
+  "description": "Magnitude of 3 + 4i",
+  "quantities": [
+    {"name": "real", "value": 3.0, "siUnit": "dimensionless", "isKnown": true},
+    {"name": "imag", "value": 4.0, "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "magnitude_result", "rhs": "magnitude(real, imag)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}

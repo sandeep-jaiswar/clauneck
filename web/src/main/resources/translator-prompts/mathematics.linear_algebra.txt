@@ -1,0 +1,19 @@
+=== mathematics.linear_algebra ===
+Matrix operations: determinant, inverse, rank, eigenvalues, solving linear systems.
+Quantities: matrices (nested lists) and vectors (arrays).
+Supported operations: det(A), inv(A), rank(A), transpose(A), eigenvalues(A), 
+eigenvectors(A), solve(A @ x, b).
+Example:
+{
+  "id": "linalg-det",
+  "domain": "mathematics.linear_algebra",
+  "description": "Determinant of 2x2 matrix",
+  "quantities": [
+    {"name": "A", "value": [[1.0, 2.0], [3.0, 4.0]], "siUnit": "dimensionless", "isKnown": true}
+  ],
+  "equations": [
+    {"lhs": "det_A", "rhs": "det(A)", "type": "algebraic"}
+  ],
+  "initialConditions": {},
+  "solver": {"method": "SYMBOLIC_SOLVE", "tolerance": 1e-6}
+}
