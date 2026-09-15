@@ -25,6 +25,7 @@ cd engine && python -m uvicorn app.main:app --port 8001
 
 # Terminal 2: Web
 export ANTHROPIC_API_KEY="sk-ant-..."
+export CLAUNECK_ENGINE_URL="http://localhost:8001"
 ./gradlew :web:bootRun
 ```
 
@@ -38,9 +39,12 @@ In Postman, run any request. Start with:
 ## Test Coverage
 
 ✅ **Happy Path**: 3 projectile motion scenarios  
+✅ **Statistics**: `mathematics.statistics` translation and direct-engine support
 ✅ **Input Validation**: Empty/null/too-long queries  
 ✅ **Error Cases**: Unsupported domains, service unavailable  
 ✅ **Direct Engine**: Bypass translator, test determinism  
+
+Example statistics query: `Compute the mean of [1, 2, 3, 4, 5].`
 
 ## Documentation
 

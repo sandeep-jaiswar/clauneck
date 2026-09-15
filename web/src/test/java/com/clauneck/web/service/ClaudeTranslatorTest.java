@@ -94,6 +94,43 @@ class ClaudeTranslatorTest {
     }
 
     @Test
+    void statisticsModelAcceptsArrayValuesWithoutPhysicsValidation() {
+        String statisticsModel = """
+                {
+                  "id": "statistics_001",
+                  "domain": "mathematics.statistics",
+                  "description": "Mean of a dataset",
+                  "quantities": [
+                    {"name": "data", "value": [1.0, 2.0, 3.0], "siUnit": "dimensionless", "isKnown": true}
+                  ],
+                  "equations": [
+                    {"lhs": "result", "rhs": "mean(data)", "type": "algebraic"}
+                  ],
+                  "initialConditions": {},
+                  "solver": {"method": "symbolic_solve", "tolerance": 1e-6},
+                  "metadata": {"source": "manual"}
+                }
+                """;
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
+                .thenReturn(responseWithText(statisticsModel));
+
+        ScientificModelDto model = translator.translate("Compute the mean of 1, 2, and 3");
+
+        assertEquals("mathematics.statistics", model.getDomain());
+        assertEquals(java.util.List.of(1.0, 2.0, 3.0), model.getQuantities().get(0).getValue());
+    }
+
+    @Test
+    void unregisteredMathematicsDomainIsRejected() {
+        String algebraModel = VALID_MODEL_JSON.replace("physics.mechanics", "mathematics.algebra");
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(AnthropicResponse.class)))
+                .thenReturn(responseWithText(algebraModel));
+
+        assertThrows(UnsupportedDomainException.class,
+                () -> translator.translate("Solve an algebra equation"));
+    }
+
+    @Test
     void claudeDeclineResponseThrowsTranslationException() {
         String decline = """
                 {"error": true, "reason": "Query is about chemistry", "suggestion": "Ask about projectile motion"}

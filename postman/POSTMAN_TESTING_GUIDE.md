@@ -24,14 +24,13 @@ Open three terminal tabs:
 
 **Terminal 1: Python Engine**
 ```bash
-cd /media/sandeep/DataDrive2/clauneck/engine
+cd engine
 python -m uvicorn app.main:app --port 8001
 ```
 ✓ Should see: `Uvicorn running on http://0.0.0.0:8001`
 
 **Terminal 2: Spring Boot Web**
 ```bash
-cd /media/sandeep/DataDrive2/clauneck
 export ANTHROPIC_API_KEY="sk-ant-YOUR-KEY-HERE"
 export CLAUDE_MODEL="claude-haiku-4-5"
 export CLAUNECK_ENGINE_URL="http://localhost:8001"
@@ -116,7 +115,7 @@ Test query validation (should return `400 Bad Request`):
 **Expected Error Response:**
 ```json
 {
-  "code": "TRANSLATION_FAILED",
+  "error": "TRANSLATION_FAILED",
   "message": "Could not translate query",
   "details": "Query must not be empty",
   "suggestion": "Provide a natural language physics query..."
@@ -128,26 +127,27 @@ Test query validation (should return `400 Bad Request`):
 Test unsupported domains and ambiguous queries (may return `400` or `501`):
 
 1. **Unsupported Domain (Chemistry)** → `query: "[chemistry problem]"`
-   - **Expected**: `501 Not Implemented` with `"code": "DOMAIN_NOT_SUPPORTED"`
+   - **Expected**: `501 Not Implemented` with `"error": "DOMAIN_NOT_SUPPORTED"`
 
 2. **Ambiguous Query** → `query: "Something goes up and down. How much?"`
-   - **Expected**: `400 Bad Request` with `"code": "TRANSLATION_FAILED"`
+   - **Expected**: `400 Bad Request` with `"error": "TRANSLATION_FAILED"`
    - Claude cannot extract structured model from vague query
 
 ### E. Error Cases - Service Unavailable
 
-Test failure modes (requires manual setup):
+These requests are skipped during normal collection runs. Set the Postman environment
+variable `run_manual_infrastructure_cases` to `true` and run them individually after
+restarting Web with the explicitly required environment state:
 
 1. **Engine Down (Wrong Port)**
-   - Set `engine_url` to `http://localhost:9999` (wrong port)
+   - Start Web with both variables set: `ANTHROPIC_API_KEY=... CLAUNECK_ENGINE_URL=http://localhost:9999 ./gradlew :web:bootRun`
    - Run any happy-path query
-   - **Expected**: `502 Bad Gateway` with `"code": "ENGINE_UNAVAILABLE"`
+   - **Expected**: `502 Bad Gateway` with `"error": "ENGINE_UNAVAILABLE"`
 
 2. **Missing ANTHROPIC_API_KEY**
-   - Unset `ANTHROPIC_API_KEY` env var
-   - Restart Spring Boot
+   - Set `CLAUNECK_ENGINE_URL=http://localhost:8001`, unset `ANTHROPIC_API_KEY`, and restart Spring Boot
    - Run any query
-   - **Expected**: `503 Service Unavailable` with `"code": "SERVICE_UNAVAILABLE"`
+   - **Expected**: `503 Service Unavailable` with `"error": "SERVICE_UNAVAILABLE"`
 
 ### F. Direct Engine Testing
 
@@ -253,7 +253,7 @@ Bypass the translator and test the engine directly:
 | **Postman can't connect to web** | Verify `./gradlew :web:bootRun` is running. Check `http://localhost:8080/actuator/health` in browser. |
 | **Postman can't connect to engine** | Verify `python -m uvicorn app.main:app --port 8001` is running. Check `http://localhost:8001/health` in browser. |
 | **Translation fails** | Ensure `ANTHROPIC_API_KEY` is set and valid. Check Spring Boot logs for Claude API errors. |
-| **"DOMAIN_NOT_SUPPORTED"** | Only `physics.mechanics` is implemented. Try projectile motion queries. |
+| **"DOMAIN_NOT_SUPPORTED"** | Supported domains are `physics.mechanics` and `mathematics.statistics`. |
 | **"VALIDATION_FAILED"** | Query may be too ambiguous. Try: "Ball at 45°, 20 m/s" (explicit, numeric). |
 | **Engine returns wrong values** | Run "Direct Engine Solve" test with same model twice—should be byte-for-byte identical (determinism). |
 
@@ -316,12 +316,10 @@ For the complete flow (translator → validation → engine):
 | `Clauneck_Local.postman_environment.json` | Environment variables (import this) |
 | `POSTMAN_TESTING_GUIDE.md` | This guide |
 
-Copy these files from the scratchpad to your project root or a `postman/` directory for version control:
+The files are already checkout-relative under `postman/`. Validate them from the repository root:
 
 ```bash
-cp Clauneck_Complete_Flow.postman_collection.json /media/sandeep/DataDrive2/clauneck/
-cp Clauneck_Local.postman_environment.json /media/sandeep/DataDrive2/clauneck/
-cp POSTMAN_TESTING_GUIDE.md /media/sandeep/DataDrive2/clauneck/
+python -m json.tool postman/Clauneck_Complete_Flow.postman_collection.json >/dev/null
 ```
 
 Then add to `.gitignore` if you don't want the collection version-controlled, or commit them if you want to version control test cases.
