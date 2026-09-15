@@ -6,7 +6,18 @@ from app.model import (
     Metadata, DimensionVector
 )
 from app.solver import GeneralSolver
-from app.solvers.physics_special_relativity import PhysicsSpecialRelativitySolver
+from app.solvers.physics_special_relativity import (
+    PhysicsSpecialRelativitySolver,
+    _energy_momentum_relation,
+    _length_contraction,
+    _lorentz_factor,
+    _relativistic_kinetic_energy,
+    _relativistic_momentum,
+    _relativistic_total_energy,
+    _rest_energy,
+    _time_dilation,
+    _relativistic_velocity_addition,
+)
 
 
 # Speed of light constant for reference calculations
@@ -403,6 +414,66 @@ def test_energy_momentum_relation_correctness(energy_momentum_relation_model):
     assert abs(result.summary["E"] - expected_E) < 1e9
 
 
+@pytest.mark.parametrize(
+    ("operation", "positive_args", "negative_args"),
+    [
+        (_lorentz_factor, (0.5 * C, C), (-0.5 * C, C)),
+        (_time_dilation, (1.0, 0.5 * C, C), (1.0, -0.5 * C, C)),
+        (_length_contraction, (1.0, 0.5 * C, C), (1.0, -0.5 * C, C)),
+        (_relativistic_total_energy, (1.0, 0.5 * C, C), (1.0, -0.5 * C, C)),
+        (_relativistic_kinetic_energy, (1.0, 0.5 * C, C), (1.0, -0.5 * C, C)),
+    ],
+)
+def test_velocity_magnitude_operations_accept_signed_velocities(
+    operation, positive_args, negative_args
+):
+    """Velocity-magnitude operations produce the same result in either direction."""
+    assert operation(*negative_args) == pytest.approx(operation(*positive_args))
+
+
+def test_relativistic_momentum_preserves_velocity_direction():
+    """Relativistic momentum is signed according to the velocity direction."""
+    positive_momentum = _relativistic_momentum(1.0, 0.5 * C, C)
+
+    assert _relativistic_momentum(1.0, -0.5 * C, C) == pytest.approx(-positive_momentum)
+
+
+def test_velocity_addition_accepts_opposite_directions():
+    """Velocity addition supports velocities in opposite directions."""
+    u = 0.6 * C
+    v = -0.5 * C
+    expected = (u + v) / (1.0 + (u * v) / (C ** 2))
+
+    assert _relativistic_velocity_addition(u, v, C) == pytest.approx(expected)
+
+
+def test_energy_momentum_relation_accepts_negative_momentum():
+    """Energy depends on squared momentum, not its direction."""
+    positive_energy = _energy_momentum_relation(1.0, 1e8, C)
+
+    assert _energy_momentum_relation(1.0, -1e8, C) == pytest.approx(positive_energy)
+
+
+@pytest.mark.parametrize("operation", [_rest_energy, _energy_momentum_relation])
+@pytest.mark.parametrize("invalid_c", [0.0, -C, math.inf, -math.inf, math.nan])
+def test_energy_operations_reject_invalid_speed_of_light(operation, invalid_c):
+    """Energy operations share finite, positive speed-of-light validation."""
+    args = (1.0, invalid_c) if operation is _rest_energy else (1.0, 1e8, invalid_c)
+
+    with pytest.raises(ValueError, match="Speed of light c must be finite and positive"):
+        operation(*args)
+
+
+def test_relativistic_kinetic_energy_is_stable_at_low_velocity():
+    """Low-speed kinetic energy approaches the classical 1/2 m v² limit."""
+    m0 = 2.0
+    v = 1.0
+
+    assert _relativistic_kinetic_energy(m0, v, C) == pytest.approx(
+        0.5 * m0 * (v ** 2), rel=1e-15
+    )
+
+
 # ============ Determinism Tests ============
 
 def test_determinism_lorentz_factor(lorentz_factor_model):
@@ -443,16 +514,15 @@ def test_determinism_rest_energy(rest_energy_model):
 @pytest.mark.parametrize(
     ("operation", "quantities", "expected_error"),
     [
-        ("lorentz_factor(v, c)", {"v": 299792458, "c": 299792458}, "Velocity must be 0 ≤ v < c"),
-        ("lorentz_factor(v, c)", {"v": 3e8, "c": 299792458}, "Velocity must be 0 ≤ v < c"),
-        ("lorentz_factor(v, c)", {"v": -1e7, "c": 299792458}, "Velocity must be 0 ≤ v < c"),
+        ("lorentz_factor(v, c)", {"v": 299792458, "c": 299792458}, "Velocity v must satisfy |v| < c"),
+        ("lorentz_factor(v, c)", {"v": 3e8, "c": 299792458}, "Velocity v must satisfy |v| < c"),
+        ("lorentz_factor(v, c)", {"v": -3e8, "c": 299792458}, "Velocity v must satisfy |v| < c"),
         ("time_dilation(t0, v, c)", {"t0": -1e-6, "v": 1e8, "c": 299792458}, "Proper time t0 must be non-negative"),
         ("length_contraction(L0, v, c)", {"L0": -10.0, "v": 1e8, "c": 299792458}, "Rest length L0 must be non-negative"),
         ("relativistic_momentum(m0, v, c)", {"m0": -1e-27, "v": 1e8, "c": 299792458}, "Rest mass m0 must be positive"),
-        ("relativistic_momentum(m0, v, c)", {"m0": 1e-27, "v": 3e8, "c": 299792458}, "Velocity must be 0 ≤ v < c"),
+        ("relativistic_momentum(m0, v, c)", {"m0": 1e-27, "v": 3e8, "c": 299792458}, "Velocity v must satisfy |v| < c"),
         ("rest_energy(m0, c)", {"m0": 0, "c": 299792458}, "Rest mass m0 must be positive"),
         ("energy_momentum_relation(m0, p, c)", {"m0": -1.0, "p": 1e8, "c": 299792458}, "Rest mass m0 must be positive"),
-        ("energy_momentum_relation(m0, p, c)", {"m0": 1.0, "p": -1e8, "c": 299792458}, "Momentum p must be non-negative"),
     ],
 )
 def test_special_relativity_validation(lorentz_factor_model, operation, quantities, expected_error):
