@@ -36,8 +36,13 @@
         "mathematics.vector_calculus",
         "physics.collisions",
         "physics.electromagnetism",
+        "physics.fluid_mechanics",
         "physics.mechanics",
+        "physics.optics",
+        "physics.quantum_mechanics",
+        "physics.rotational_dynamics",
         "physics.simple_harmonic_motion",
+        "physics.special_relativity",
         "physics.thermodynamics",
         "physics.waves"
       ],
