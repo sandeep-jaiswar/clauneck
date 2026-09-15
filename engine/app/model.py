@@ -2,7 +2,7 @@
 Pydantic models for scientific prototyping engine.
 Maps to schemas/model.schema.json — same contract across Java and Python.
 """
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Any
 from pydantic import BaseModel, model_validator
 from enum import Enum
 
@@ -83,7 +83,7 @@ class ScientificModel(BaseModel):
     description: Optional[str] = None
     quantities: List[Quantity]
     equations: List[Equation]
-    initialConditions: Optional[Dict[str, float]] = {}
+    initialConditions: Optional[Dict[str, Any]] = {}
     boundaryConditions: Optional[List[Dict]] = []
     solver: Solver
     metadata: Optional[Metadata] = None
@@ -94,7 +94,7 @@ class SolverResult(BaseModel):
     success: bool
     message: str
     trajectory: Optional[Dict[str, List[float]]] = None
-    summary: Optional[Dict[str, float]] = None
+    summary: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
 
