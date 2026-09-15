@@ -1,0 +1,9 @@
+=== mathematics.graph_theory ===
+Graph algorithms: shortest paths, minimum spanning trees, centrality measures, connectivity.
+Quantities: adjacency matrices (2D nested lists), edge lists (arrays of [source, target, weight]).
+Supported operations: adjacency_matrix_from_edges, connected_components, is_bipartite,
+dijkstra_shortest_path, bellman_ford_shortest_path, floyd_warshall_apsp, prims_mst,
+kruskals_mst, graph_coloring, chromatic_polynomial, degree_centrality, betweenness_centrality,
+closeness_centrality, graph_diameter.
+Solver method: SYMBOLIC_SOLVE (algorithms run to completion without iteration).
+Example: find shortest path between two vertices in a weighted graph using Dijkstra.
