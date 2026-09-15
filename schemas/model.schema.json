@@ -23,7 +23,7 @@
       "description": "All variables, constants, and unknowns in the model",
       "items": {
         "type": "object",
-        "required": ["name", "siUnit"],
+        "required": ["name", "siUnit", "isKnown"],
         "properties": {
           "name": {
             "type": "string",
@@ -60,6 +60,16 @@
             "description": "True if value is given; false if this is an unknown to solve for"
           }
         },
+        "oneOf": [
+          {
+            "required": ["value"],
+            "properties": { "isKnown": { "const": true } }
+          },
+          {
+            "not": { "required": ["value"] },
+            "properties": { "isKnown": { "const": false } }
+          }
+        ],
         "additionalProperties": false
       }
     },
@@ -120,7 +130,7 @@
     "solver": {
       "type": "object",
       "description": "Numerical solver configuration",
-      "required": ["method"],
+      "required": ["method", "tolerance", "timeSpan"],
       "properties": {
         "method": {
           "type": "string",
@@ -132,14 +142,10 @@
           "description": "Relative tolerance for numeric integration (e.g., 1e-6)",
           "default": 1e-6
         },
-        "maxSteps": {
-          "type": "integer",
-          "description": "Maximum integration steps",
-          "default": 10000
-        },
         "timeSpan": {
           "type": "object",
           "description": "Time range for ODE integration",
+          "required": ["start", "end"],
           "properties": {
             "start": { "type": "number" },
             "end": { "type": "number" },

@@ -32,7 +32,7 @@ See `docs/adr/` for full rationale:
 ```bash
 make build                # Build all (Gradle + Python)
 make test                 # Test all (Gradle + Python)
-make run                  # Start engine-python FastAPI service
+make run                  # Start engine FastAPI service
 make clean                # Clean all build artifacts
 ```
 
@@ -209,7 +209,7 @@ Language-agnostic JSON Schema for scientific models. Both Java and Python valida
 - `UnitRegistry`: SI units, conversion factors
 - Runs before solver; catches nonsense early
 
-### Layer 4: Compute Engine (engine-python)
+### Layer 4: Compute Engine (engine)
 - `ProjectileMotionSolver`: vertical slice (end-to-end proof)
 - `GeneralSolver`: extensible routing by domain
 - Deterministic: SymPy + SciPy with pinned versions, explicit solver config
@@ -240,9 +240,9 @@ Language-agnostic JSON Schema for scientific models. Both Java and Python valida
 
 ### New Domains
 1. Add domain to `domain` enum in schema
-2. Create specialized solver in `engine-python/app/solver.py` (e.g., `ChemicalKineticsSolver`)
+2. Create specialized solver in `engine/app/solver.py` (e.g., `ChemicalKineticsSolver`)
 3. Update `GeneralSolver.solve()` to route to it
-4. Add tests to `engine-python/tests/`
+4. Add tests to `engine/tests/`
 
 ### New Quantities / Constants
 1. Add to schema if new fundamental type

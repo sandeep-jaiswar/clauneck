@@ -2,12 +2,13 @@
 Tests for projectile motion solver.
 Golden-file tests for determinism: same model → same output.
 """
+import numpy as np
 import pytest
 from app.model import (
     ScientificModel, Quantity, Equation, EquationType, Solver, SolverMethod,
     TimeSpan, Metadata, DimensionVector
 )
-from app.solver import ProjectileMotionSolver
+from app.solver import GeneralSolver, ProjectileMotionSolver
 
 
 @pytest.fixture
@@ -29,8 +30,8 @@ def projectile_model():
             Quantity(
                 name="angle",
                 value=45.0,
-                siUnit="rad",
-                description="Launch angle (degrees for now)",
+                siUnit="deg",
+                description="Launch angle",
                 isKnown=True,
                 dimensionVector=DimensionVector()  # dimensionless
             ),
@@ -77,7 +78,6 @@ def projectile_model():
         solver=Solver(
             method=SolverMethod.RK45,
             tolerance=1e-6,
-            maxSteps=10000,
             timeSpan=TimeSpan(start=0, end=5, numPoints=500)
         ),
         metadata=Metadata(source="test", originalQuery="projectile 20m/s 45deg")
@@ -94,7 +94,7 @@ def projectile_with_drag():
         quantities=[
             Quantity(name="v0", value=20.0, siUnit="m/s", isKnown=True,
                      dimensionVector=DimensionVector(length=1, time=-1)),
-            Quantity(name="angle", value=45.0, siUnit="rad", isKnown=True),
+            Quantity(name="angle", value=45.0, siUnit="deg", isKnown=True),
             Quantity(name="mass", value=0.5, siUnit="kg", isKnown=True,
                      dimensionVector=DimensionVector(mass=1)),
             Quantity(name="g", value=9.81, siUnit="m/s^2", isKnown=True,
@@ -127,6 +127,7 @@ def test_projectile_no_drag_solvable(projectile_model):
     assert "max_range" in result.summary
     assert "max_height" in result.summary
     assert "flight_time" in result.summary
+    assert all(y >= 0 for y in result.trajectory["y"])
 
 
 def test_projectile_no_drag_range(projectile_model):
@@ -189,6 +190,49 @@ def test_determinism(projectile_model):
 
     # Compare summary
     assert result1.summary == result2.summary
+
+
+def test_declared_radians_are_not_reinterpreted(projectile_model):
+    """A small radian value remains radians rather than being treated as degrees."""
+    quantities = [
+        quantity.model_copy(update={"value": 0.5, "siUnit": "rad"})
+        if quantity.name == "angle" else quantity
+        for quantity in projectile_model.quantities
+    ]
+    initial_conditions = dict(projectile_model.initialConditions)
+    initial_conditions["angle"] = 0.5
+    model = projectile_model.model_copy(update={
+        "quantities": quantities,
+        "initialConditions": initial_conditions,
+    })
+
+    result = ProjectileMotionSolver().solve(model)
+
+    assert result.success
+    expected_range = 20**2 * np.sin(1.0) / 9.81
+    assert abs(result.summary["max_range"] - expected_range) < 2.0
+
+
+def test_general_solver_routes_no_drag_projectile(projectile_model):
+    quantities = [
+        quantity for quantity in projectile_model.quantities
+        if quantity.name != "drag_coeff"
+    ]
+    initial_conditions = dict(projectile_model.initialConditions)
+    initial_conditions.pop("drag_coeff")
+    equations = [
+        Equation(lhs="d2x/dt2", rhs="0", type=EquationType.ODE),
+        Equation(lhs="d2y/dt2", rhs="-g", type=EquationType.ODE),
+    ]
+    model = projectile_model.model_copy(update={
+        "quantities": quantities,
+        "initialConditions": initial_conditions,
+        "equations": equations,
+    })
+
+    result = GeneralSolver().solve(model)
+
+    assert result.success
 
 
 if __name__ == "__main__":

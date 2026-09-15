@@ -34,6 +34,9 @@ public class DimensionalAnalyzer {
       Optional<Dimension> dim = unitRegistry.parseDimension(q.getSiUnit());
       if (dim.isEmpty()) {
         errors.add("Quantity '" + q.getName() + "': unparseable unit '" + q.getSiUnit() + "'");
+      } else if (!dim.get().isConsistentWith(q.getDimension())) {
+        errors.add("Quantity '" + q.getName() + "': unit '" + q.getSiUnit()
+            + "' does not match its declared dimension");
       }
     }
 
@@ -49,11 +52,25 @@ public class DimensionalAnalyzer {
     for (Equation eq : model.getEquations()) {
       if (eq.getLhs().isEmpty() || eq.getRhs().isEmpty()) {
         errors.add("Equation has empty lhs or rhs");
+        continue;
+      }
+
+      Optional<Dimension> lhsDimension = resolveQuantityDimension(model, eq.getLhs());
+      Optional<Dimension> rhsDimension = resolveQuantityDimension(model, eq.getRhs());
+      if (lhsDimension.isPresent() && rhsDimension.isPresent()
+          && !lhsDimension.get().isConsistentWith(rhsDimension.get())) {
+        errors.add("Equation '" + eq.getLhs() + " = " + eq.getRhs()
+            + "' has inconsistent dimensions");
       }
     }
 
     boolean isValid = errors.isEmpty();
     return new ValidationResult(isValid, errors, warnings);
+  }
+
+  private Optional<Dimension> resolveQuantityDimension(Model model, String term) {
+    return model.getQuantity(term.trim())
+        .flatMap(quantity -> unitRegistry.parseDimension(quantity.getSiUnit()));
   }
 
   public static class ValidationResult {

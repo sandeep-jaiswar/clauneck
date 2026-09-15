@@ -1,5 +1,8 @@
 package com.clauneck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -7,18 +10,46 @@ import java.util.Optional;
  * A single equation or constraint in a model.
  */
 public class Equation {
-  public enum Type { ALGEBRAIC, ODE, PDE, CONSTRAINT }
+  public enum Type {
+    ALGEBRAIC("algebraic"), ODE("ode"), PDE("pde"), CONSTRAINT("constraint");
+
+    private final String schemaValue;
+
+    Type(String schemaValue) {
+      this.schemaValue = schemaValue;
+    }
+
+    @JsonValue
+    public String getSchemaValue() {
+      return schemaValue;
+    }
+
+    @JsonCreator
+    public static Type fromSchemaValue(String value) {
+      for (Type type : values()) {
+        if (type.schemaValue.equals(value)) {
+          return type;
+        }
+      }
+      throw new IllegalArgumentException("Unknown equation type: " + value);
+    }
+  }
 
   private final String lhs; // left-hand side symbolic expression
   private final String rhs; // right-hand side symbolic expression
   private final Type type;
   private final Optional<String> description;
 
-  public Equation(String lhs, String rhs, Type type, Optional<String> description) {
+  @JsonCreator
+  public Equation(
+      @JsonProperty(value = "lhs", required = true) String lhs,
+      @JsonProperty(value = "rhs", required = true) String rhs,
+      @JsonProperty("type") Type type,
+      @JsonProperty("description") Optional<String> description) {
     this.lhs = Objects.requireNonNull(lhs);
     this.rhs = Objects.requireNonNull(rhs);
-    this.type = Objects.requireNonNull(type);
-    this.description = Objects.requireNonNull(description);
+    this.type = type == null ? Type.ALGEBRAIC : type;
+    this.description = description == null ? Optional.empty() : description;
   }
 
   public static Builder builder() {

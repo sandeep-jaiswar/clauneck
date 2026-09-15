@@ -1,6 +1,8 @@
 package com.clauneck.core.model;
 
 import com.clauneck.core.units.Dimension;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -15,14 +17,23 @@ public class Quantity {
   private final boolean isKnown;
   private final Optional<String> description;
 
-  public Quantity(String name, Optional<Double> value, String siUnit, Dimension dimension,
-      boolean isKnown, Optional<String> description) {
+  @JsonCreator
+  public Quantity(
+      @JsonProperty(value = "name", required = true) String name,
+      @JsonProperty("value") Optional<Double> value,
+      @JsonProperty(value = "siUnit", required = true) String siUnit,
+      @JsonProperty("dimensionVector") Dimension dimension,
+      @JsonProperty(value = "isKnown", required = true) boolean isKnown,
+      @JsonProperty("description") Optional<String> description) {
     this.name = Objects.requireNonNull(name);
-    this.value = Objects.requireNonNull(value);
+    this.value = value == null ? Optional.empty() : value;
     this.siUnit = Objects.requireNonNull(siUnit);
-    this.dimension = Objects.requireNonNull(dimension);
+    this.dimension = dimension == null ? Dimension.DIMENSIONLESS : dimension;
     this.isKnown = isKnown;
-    this.description = Objects.requireNonNull(description);
+    this.description = description == null ? Optional.empty() : description;
+    if (isKnown != this.value.isPresent()) {
+      throw new IllegalArgumentException("isKnown must be true exactly when value is present");
+    }
   }
 
   public static Builder builder(String name) {
@@ -76,7 +87,9 @@ public class Quantity {
   public String getName() { return name; }
   public Optional<Double> getValue() { return value; }
   public String getSiUnit() { return siUnit; }
+  @JsonProperty("dimensionVector")
   public Dimension getDimension() { return dimension; }
+  @JsonProperty("isKnown")
   public boolean isKnown() { return isKnown; }
   public Optional<String> getDescription() { return description; }
 

@@ -71,4 +71,13 @@ public class DimensionTest {
   public void testInconsistency() {
     assertFalse(Dimension.LENGTH_DIMENSION.isConsistentWith(Dimension.TIME_DIMENSION));
   }
+
+  @Test
+  public void testApproximateConsistencyDoesNotImplyEquality() {
+    Dimension exact = new Dimension(1, 0, 0, 0, 0, 0, 0);
+    Dimension nearlyEqual = new Dimension(1 + 1e-11, 0, 0, 0, 0, 0, 0);
+
+    assertTrue(exact.isConsistentWith(nearlyEqual));
+    assertNotEquals(exact, nearlyEqual);
+  }
 }

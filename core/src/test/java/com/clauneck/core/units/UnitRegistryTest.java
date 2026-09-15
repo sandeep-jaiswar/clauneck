@@ -70,4 +70,25 @@ public class UnitRegistryTest {
     assertTrue(retrieved.isPresent());
     assertEquals("cm", retrieved.get().getSymbol());
   }
+
+  @Test
+  public void testRejectsEmptyUnitTerms() {
+    assertFalse(registry.parseDimension("m/").isPresent());
+    assertFalse(registry.parseDimension("m*").isPresent());
+    assertFalse(registry.parseDimension("/s").isPresent());
+  }
+
+  @Test
+  public void testRejectsNonFinitePowers() {
+    assertFalse(registry.parseDimension("m^NaN").isPresent());
+    assertFalse(registry.parseDimension("m^Infinity").isPresent());
+  }
+
+  @Test
+  public void testAllBaseUnitsHaveTheirFundamentalDimension() {
+    assertEquals(Dimension.CURRENT_DIMENSION, registry.parseDimension("A").get());
+    assertEquals(Dimension.TEMPERATURE_DIMENSION, registry.parseDimension("K").get());
+    assertEquals(Dimension.AMOUNT_DIMENSION, registry.parseDimension("mol").get());
+    assertEquals(Dimension.LUMINOUS_DIMENSION, registry.parseDimension("cd").get());
+  }
 }

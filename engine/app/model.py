@@ -3,7 +3,7 @@ Pydantic models for scientific prototyping engine.
 Maps to schemas/model.schema.json — same contract across Java and Python.
 """
 from typing import Optional, Dict, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, model_validator
 from enum import Enum
 
 
@@ -41,7 +41,13 @@ class Quantity(BaseModel):
     value: Optional[float] = None
     siUnit: str
     dimensionVector: Optional[DimensionVector] = None
-    isKnown: bool = False
+    isKnown: bool
+
+    @model_validator(mode="after")
+    def known_status_matches_value(self):
+        if self.isKnown != (self.value is not None):
+            raise ValueError("isKnown must be true exactly when value is present")
+        return self
 
 
 class Equation(BaseModel):
@@ -58,10 +64,9 @@ class TimeSpan(BaseModel):
 
 
 class Solver(BaseModel):
-    method: SolverMethod = SolverMethod.RK45
-    tolerance: float = 1e-6
-    maxSteps: int = 10000
-    timeSpan: Optional[TimeSpan] = None
+    method: SolverMethod
+    tolerance: float
+    timeSpan: TimeSpan
 
 
 class Metadata(BaseModel):
