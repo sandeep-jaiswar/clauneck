@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Scientific Model",
+  "description": "Unified representation of a scientific model: quantities, equations, and solver configuration for deterministic prototyping.",
+  "type": "object",
+  "required": ["id", "domain", "quantities", "equations", "solver"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this model instance (e.g., UUID or human-readable name)"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["physics.mechanics", "physics.thermodynamics", "chemistry.kinetics", "mathematics.general"],
+      "description": "Domain classification for this model"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this model represents"
+    },
+    "quantities": {
+      "type": "array",
+      "description": "All variables, constants, and unknowns in the model",
+      "items": {
+        "type": "object",
+        "required": ["name", "siUnit"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Variable name (e.g., 'v0', 'mass', 'g')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          },
+          "value": {
+            "type": "number",
+            "description": "Numeric value if known; omit if unknown (to be solved for)"
+          },
+          "siUnit": {
+            "type": "string",
+            "description": "SI unit string (e.g., 'm/s', 'kg', 'rad', 'dimensionless')"
+          },
+          "dimensionVector": {
+            "type": "object",
+            "description": "Fundamental dimension exponents [L, M, T, I, Θ, N, J]",
+            "properties": {
+              "length": { "type": "number", "default": 0 },
+              "mass": { "type": "number", "default": 0 },
+              "time": { "type": "number", "default": 0 },
+              "electricCurrent": { "type": "number", "default": 0 },
+              "temperature": { "type": "number", "default": 0 },
+              "amountOfSubstance": { "type": "number", "default": 0 },
+              "luminousIntensity": { "type": "number", "default": 0 }
+            },
+            "additionalProperties": false
+          },
+          "isKnown": {
+            "type": "boolean",
+            "description": "True if value is given; false if this is an unknown to solve for"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "equations": {
+      "type": "array",
+      "description": "Symbolic equations and constraints",
+      "items": {
+        "type": "object",
+        "required": ["lhs", "rhs"],
+        "properties": {
+          "lhs": {
+            "type": "string",
+            "description": "Left-hand side symbolic expression (e.g., 'd2x/dt2')"
+          },
+          "rhs": {
+            "type": "string",
+            "description": "Right-hand side symbolic expression (e.g., '-g - (drag_coeff * vx * |v| / mass)')"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["algebraic", "ode", "pde", "constraint"],
+            "description": "Type of equation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable meaning (e.g., 'Newton second law: horizontal motion')"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "initialConditions": {
+      "type": "object",
+      "description": "Values at t=0 (for ODEs)",
+      "properties": {
+        "time": { "type": "number", "description": "Initial time" },
+        "values": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "Variable name -> value at t=0"
+        }
+      },
+      "additionalProperties": false
+    },
+    "boundaryConditions": {
+      "type": "array",
+      "description": "Boundary conditions (e.g., for PDEs or shooting problems)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "variable": { "type": "string" },
+          "location": { "type": "string", "description": "e.g., 'x=0', 't=final'" },
+          "value": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "solver": {
+      "type": "object",
+      "description": "Numerical solver configuration",
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["RK45", "RK23", "DOP853", "solve_ivp", "odeint", "symbolic_solve", "fsolve"],
+          "description": "Solver algorithm"
+        },
+        "tolerance": {
+          "type": "number",
+          "description": "Relative tolerance for numeric integration (e.g., 1e-6)",
+          "default": 1e-6
+        },
+        "maxSteps": {
+          "type": "integer",
+          "description": "Maximum integration steps",
+          "default": 10000
+        },
+        "timeSpan": {
+          "type": "object",
+          "description": "Time range for ODE integration",
+          "properties": {
+            "start": { "type": "number" },
+            "end": { "type": "number" },
+            "numPoints": { "type": "integer", "description": "Number of output points" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Audit trail and provenance",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "description": "How this model was created (e.g., 'llm_translator', 'manual')" },
+        "originalQuery": { "type": "string", "description": "Original natural-language input from user" },
+        "validationErrors": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

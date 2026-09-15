@@ -4,60 +4,111 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**clauneck** is a multi-module Gradle project with three modules:
+**clauneck** is a scientific prototyping platform: deterministic, efficient, smart, configurable. Users describe math/physics/chemistry ideas; the system models, validates, and solves them.
 
-- **core**: Base library module with shared utilities (Guava dependency)
-- **web**: Spring Boot web application module for REST APIs and web services
-- **api**: API module that depends on core
+**Architecture**: Polyglot monorepo (Java + Python) with LLM translation boundary + deterministic computation.
 
-The project uses:
-- **Build System**: Gradle 4.4.1
-- **Java Version**: 21
-- **Key Dependencies**: Spring Boot 3.2.2 (web), Guava 31.1-jre (core)
-- **CI/CD**: GitHub Actions (builds and tests on push/PR to production branch)
+### Modules
+- **core** (Java): UnitSystem, dimensional analysis, schema validation
+- **web** (Java, Spring Boot 3.2.2): API gateway, translator client, engine orchestration
+- **engine-python** (Python, FastAPI): Symbolic + numeric solving (SymPy, SciPy)
+- **api** (Java): Reserved for future use
+- **schemas**: JSON Schema contract shared across Java + Python
+
+### Technology Stack
+- **Java**: 21, Gradle 4.4.1, Spring Boot 3.2.2, JUnit 5
+- **Python**: 3.10+, FastAPI, SymPy, NumPy, SciPy
+- **Schema**: JSON Schema (models/model.schema.json)
+- **CI/CD**: GitHub Actions (on push/PR to production)
+
+### Key Design Decisions
+See `docs/adr/` for full rationale:
+- **0001-polyglot-monorepo**: Why two languages + one repo
+- **0002-llm-translator-boundary**: Why LLM is only for translation, not computation
 
 ## Build and Development Commands
 
-### Build
+### Unified (Root Makefile)
 ```bash
-gradle build              # Build all modules and run tests
+make build                # Build all (Gradle + Python)
+make test                 # Test all (Gradle + Python)
+make run                  # Start engine-python FastAPI service
+make clean                # Clean all build artifacts
+```
+
+### Java / Gradle
+```bash
+gradle build              # Build all Java modules and run tests
 gradle build -x test      # Build without running tests
-gradle clean              # Clean build artifacts (.gradle, build/)
+gradle clean              # Clean (.gradle, build/)
+gradle :core:test         # Test core module (dimensional analysis, unit system)
+gradle :web:test          # Test web module
+gradle tasks              # List all available tasks
 ```
 
-### Testing
+### Python / Engine
 ```bash
-gradle test               # Run all tests across all modules
-gradle :module:test       # Run tests for a specific module (e.g., gradle :web:test)
+cd engine-python && python -m pip install -e .                    # Install engine + deps
+cd engine-python && python -m pip install -e ".[dev]"             # Install with test deps
+cd engine-python && python -m pytest tests/ -v                    # Run projectile motion tests
+cd engine-python && python -m uvicorn app.main:app --port 8001    # Start FastAPI service
 ```
 
-### Module-Specific Tasks
-```bash
-gradle :core:build        # Build only core module
-gradle :web:build         # Build only web module
-gradle :api:build         # Build only api module
-gradle tasks              # List all available Gradle tasks
-```
-
-### IDE Integration
-```bash
-gradle idea               # Generate IntelliJ IDEA project files (if configured)
-```
+### Polyglot Notes
+- Gradle and Poetry/uv manage dependencies independently
+- Schema (JSON) is the contract; both sides validate against it
+- `Makefile` provides one entry point for common tasks
+- CI runs both `gradle build` and `pytest` (see `.github/workflows/ci.yml`)
 
 ## Project Structure
 
 ```
 clauneck/
-├── core/                 # Base library module
-│   └── build.gradle      # Declares Guava dependency
-├── web/                  # Spring Boot web module
-│   └── build.gradle      # Declares Spring Boot web starter, depends on :core
-├── api/                  # API module
-│   └── build.gradle      # Depends on :core
-├── build.gradle          # Root build configuration (currently minimal)
-├── settings.gradle       # Defines modules: core, web, api
-└── .github/workflows/ci.yml  # GitHub Actions CI pipeline
+├── schemas/
+│   └── model.schema.json              # Shared contract (Java + Python)
+├── core/                              # Java: units, dimensions, validation
+│   ├── src/main/java/.../
+│   │   ├── units/                    # Dimension, Unit, UnitRegistry
+│   │   ├── model/                    # Model, Quantity, Equation, SolverConfig
+│   │   └── validation/               # DimensionalAnalyzer
+│   ├── src/test/java/.../            # Dimension, Unit, Analyzer tests
+│   └── build.gradle
+├── engine-python/                    # Python: SymPy + SciPy solver
+│   ├── app/
+│   │   ├── main.py                  # FastAPI /api/solve endpoint
+│   │   ├── model.py                 # Pydantic models (from schema)
+│   │   └── solver.py                # ProjectileMotionSolver, GeneralSolver
+│   ├── tests/
+│   │   └── test_projectile.py       # Determinism + correctness tests
+│   └── pyproject.toml               # Dependencies + build config
+├── web/                              # Java: Spring Boot API gateway (to be completed)
+│   └── build.gradle
+├── api/                              # Reserved for future use
+│   └── build.gradle
+├── docs/
+│   ├── architecture.md              # Full system design
+│   └── adr/                         # Decision records
+│       ├── 0001-polyglot-monorepo.md
+│       └── 0002-llm-translator-boundary.md
+├── Makefile                         # Root orchestration (build, test, run, clean)
+├── CLAUDE.md                        # This file
+├── build.gradle                     # Root Gradle config
+├── settings.gradle                  # Gradle module definitions
+└── .github/workflows/ci.yml         # CI (to be updated for Python)
 ```
+
+**Core Directories (Java)**
+- `core/src/main/java/com/clauneck/core/units/`: SI units, dimensional analysis
+- `core/src/main/java/com/clauneck/core/model/`: Scientific model representation
+- `core/src/main/java/com/clauneck/core/validation/`: Schema validation
+
+**Engine (Python)**
+- `engine-python/app/solver.py`: ProjectileMotionSolver (vertical slice), GeneralSolver (extensible)
+- `engine-python/app/model.py`: Pydantic models matching JSON Schema
+
+**Documentation**
+- `docs/architecture.md`: System overview, layers, vertical slice example
+- `docs/adr/`: Architecture Decision Records (polyglot, LLM boundary, determinism)
 
 ## Dependencies and Relationships
 
@@ -143,11 +194,71 @@ All skills follow these patterns:
 /sdlc maintain
 ```
 
+## Architecture Layers
+
+### Layer 1: Schema (`schemas/model.schema.json`)
+Language-agnostic JSON Schema for scientific models. Both Java and Python validate against this — no duplication.
+
+### Layer 2: Translator (web module, to be implemented)
+- Claude API integration: natural language → validated Model JSON
+- Endpoint: `POST /api/prototype`
+- Key: LLM never touches computation, only translation
+
+### Layer 3: Validator (core module)
+- `DimensionalAnalyzer`: unit parsing, dimensional consistency
+- `UnitRegistry`: SI units, conversion factors
+- Runs before solver; catches nonsense early
+
+### Layer 4: Compute Engine (engine-python)
+- `ProjectileMotionSolver`: vertical slice (end-to-end proof)
+- `GeneralSolver`: extensible routing by domain
+- Deterministic: SymPy + SciPy with pinned versions, explicit solver config
+- Exposed as FastAPI microservice (`POST /api/solve`)
+
+### Layer 5: API Gateway (web module, to be completed)
+- Orchestrates translator → validator → engine
+- Returns complete response: Model + Results
+- Endpoint: `POST /api/prototype`
+
+## Determinism & Reproducibility
+
+**Guarantee**: Identical Model → identical results (byte-for-byte, to numeric precision).
+
+### Implementation
+- Schema validation: no silent coercion
+- Dependency pinning: `poetry.lock` for Python, Gradle lock for Java
+- Solver config explicit: method, tolerance, time span all in Model
+- Golden-file tests: same input run twice → compare trajectories
+
+### Testing Strategy
+- Unit: Dimension arithmetic, UnitRegistry parsing
+- Integration: Model validation, dimensional analysis
+- End-to-end: Full solve path (Model → trajectory)
+- Determinism: Run solver twice, compare byte-for-byte
+
+## Extension Points
+
+### New Domains
+1. Add domain to `domain` enum in schema
+2. Create specialized solver in `engine-python/app/solver.py` (e.g., `ChemicalKineticsSolver`)
+3. Update `GeneralSolver.solve()` to route to it
+4. Add tests to `engine-python/tests/`
+
+### New Quantities / Constants
+1. Add to schema if new fundamental type
+2. Register in `core/UnitRegistry` (SI units)
+3. Document in `docs/architecture.md`
+
+### Custom LLM Prompts
+- Not in this slice (to be added in translator layer)
+- Will be constrained to schema + knowledge base
+
 ## Notes for Future Development
 
-- Source code follows standard Gradle project structure: `src/main/java` and `src/test/java`
-- The project is freshly scaffolded with minimal dependencies; add test frameworks (JUnit, Mockito) as needed
-- For the web module, Spring Boot auto-configuration applies based on classpath dependencies
-- Current build files are minimal; plugins and common configurations can be extracted to root `build.gradle` as the project grows
-- Maintain `CLAUDE.md` as the source of truth for project patterns and AI-assistant guidance
-- Skills are stored in `.claude/skills/` and committed to version control for team consistency
+- **Vertical slice complete**: Projectile motion (physics.mechanics) works end-to-end
+- **Next slice**: Implement Translator layer (Claude integration) + PrototypeController + full API orchestration
+- **Third slice**: Second domain (chemistry.kinetics) to validate schema generalization
+- **CI/CD update needed**: Add Python test stage to `.github/workflows/ci.yml` once engine stabilizes
+- **Performance**: Engine runs as persistent FastAPI service (not per-request) to avoid startup overhead
+- **Maintain `CLAUDE.md`**: Update when new patterns emerge or build commands change
+- **Skills**: Stored in `.claude/skills/`; add domain-specific patterns as they're discovered
