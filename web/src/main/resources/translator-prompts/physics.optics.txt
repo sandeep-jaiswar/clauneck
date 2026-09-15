@@ -1,0 +1,6 @@
+=== physics.optics ===
+Geometric optics: thin lenses, mirrors, refraction, diffraction, optical magnification.
+Quantities: focal length (m), object distance (m), image distance (m), magnification (dimensionless), refractive index (dimensionless), angle (rad/deg), wavelength (m), distance (m), aperture diameter (m), power (diopters).
+Supported operations: thin_lens_image_distance, mirror_image_distance, magnification_optical, lensmaker_focal_length, snells_law_angle2, critical_angle, double_slit_fringe_spacing, diffraction_grating_angle, lens_power.
+Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Example: A thin converging lens has focal length 0.1 m. An object is placed 0.2 m away. Where is the image formed?
