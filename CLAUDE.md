@@ -239,7 +239,6 @@ See `translator-prompts/*.txt` for current examples.
 
 ### Known Gaps
 - No Python lockfile (only `>=` versions) – future improvement
-- ODE solver `test_coupled_ode_oscillatory` is flaky (numerical issue, not code issue)
 
 ## Translator Prompt Externalization (Phase 1 ADR)
 
@@ -288,10 +287,11 @@ See `translator-prompts/*.txt` for current examples.
 
 - **Phase 0 (complete)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains. 556 passing tests. Added Python test stage to CI, lockfile for determinism.
 - **Phase 1 (complete)**: Domain Coverage — implemented all 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and prompts. 735 passing tests total. **All 33 schema domains now implemented.**
+- **Flaky Test Fixed**: Corrected Lotka-Volterra initial conditions in test_coupled_ode_oscillatory (was using equilibrium point, now uses non-equilibrium point for proper oscillations). **736 tests now passing consistently.**
 - **Phase 2 (complete)**: Wire the dormant DimensionalAnalyzer into the live request path. Created `DimensionalMismatchException` + `DimensionalValidationService` mapping layer. All requests now validated for dimensional consistency before reaching engine. Exception handler returns 400 on mismatch with clear error details.
-- **Phase 3 (complete)**: Centralized knowledge base of constants. Created `engine/data/constants.json` with 20+ physical/chemical constants (NIST CODATA 2018 / SI 2019) and `engine/app/constants.py` module for programmatic access. Updated quantum_mechanics and special_relativity solvers to import from constants instead of hardcoding. Updated translator prompts to reference centralized KB. Reduces LLM hallucination risk in translator and eliminates scattered magic numbers.
-- **Phase 4 (complete)**: Demo Web UI with live plots and exports. Created lightweight static SPA (HTML/JS) served from Spring Boot's /static/. Features query input, real-time model/result rendering, interactive trajectory plots (Chart.js), and CSV/PNG export. Added CORS configuration (CorsConfig) to enable browser requests. UnitRegistry exposed as Spring bean for dimensional validation wiring. Responsive design for desktop/mobile. No regressions to existing API contract.
-- **Phase 5 (complete)**: SQLite-backed prototype history and gallery. Implemented persistent storage using Spring Data JPA + SQLite. Prototype entity stores {id, query, modelJson, resultJson, createdAt}. PrototypeController saves successful solves automatically. New GET /api/prototype/history endpoint returns paginated history. UI now has tabbed navigation (Solver / History) with gallery view showing past queries, domain, success status, and timestamps. Database auto-initializes schema on startup.
+- **Phase 3 (complete)**: Centralized knowledge base of constants. Created `engine/data/constants.json` with 20+ physical/chemical constants (NIST CODATA 2018 / SI 2019) and `engine/app/constants.py` module for programmatic access. Updated quantum_mechanics and special_relativity solvers to import from constants instead of hardcoding. Updated translator prompts to reference centralized KB. Reduces LLM hallucination risk in translator and eliminates scattered magic numbers. 735 passing tests.
+- **Phase 4 (complete)**: Demo Web UI with live plots and exports. Created lightweight static SPA (HTML/JS) served from Spring Boot's /static/. Features query input, real-time model/result rendering, interactive trajectory plots (Chart.js), and CSV/PNG export. Added CORS configuration (CorsConfig) to enable browser requests. UnitRegistry exposed as Spring bean for dimensional validation wiring. Responsive design for desktop/mobile. No regressions to existing API contract. 735 passing tests.
+- **Phase 5 (complete)**: SQLite-backed prototype history and gallery. Implemented persistent storage using Spring Data JPA + SQLite. Prototype entity stores {id, query, modelJson, resultJson, createdAt}. PrototypeController saves successful solves automatically. New GET /api/prototype/history endpoint returns paginated history. UI now has tabbed navigation (Solver / History) with gallery view showing past queries, domain, success status, and timestamps. Database auto-initializes schema on startup. 736 passing tests (flaky test fixed).
 - **Performance**: Engine runs as persistent FastAPI service; translator uses Haiku (cost/latency optimized)
 - **Maintain CLAUDE.md**: Update when new patterns emerge
 
