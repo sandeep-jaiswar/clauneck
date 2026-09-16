@@ -5,6 +5,7 @@ from app.model import ScientificModel, SolverResult, Quantity
 from app.solvers.base import SolverBase
 from app.solvers.registry import register
 from app.solvers.utils import run_dispatch
+from app.constants import SPEED_OF_LIGHT
 
 
 def _validate_speed_of_light(c: float) -> None:
@@ -22,15 +23,19 @@ def _validate_velocity(v: float, c: float, name: str = "v") -> None:
         )
 
 
-def _lorentz_factor(v: float, c: float = 299792458) -> float:
+def _lorentz_factor(v: float, c: float = None) -> float:
     """Lorentz factor: γ = 1 / √(1 - v²/c²) (dimensionless)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     beta_squared = (v / c) ** 2
     return float(1.0 / math.sqrt(1.0 - beta_squared))
 
 
-def _time_dilation(t0: float, v: float, c: float = 299792458) -> float:
+def _time_dilation(t0: float, v: float, c: float = None) -> float:
     """Time dilation: t = t0 * γ = t0 / √(1 - v²/c²) (seconds)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     if t0 < 0:
         raise ValueError(f"Proper time t0 must be non-negative; got t0={t0} s")
@@ -38,8 +43,10 @@ def _time_dilation(t0: float, v: float, c: float = 299792458) -> float:
     return float(t0 * gamma)
 
 
-def _length_contraction(L0: float, v: float, c: float = 299792458) -> float:
+def _length_contraction(L0: float, v: float, c: float = None) -> float:
     """Length contraction: L = L0 * √(1 - v²/c²) (meters)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     if L0 < 0:
         raise ValueError(f"Rest length L0 must be non-negative; got L0={L0} m")
@@ -47,8 +54,10 @@ def _length_contraction(L0: float, v: float, c: float = 299792458) -> float:
     return float(L0 * math.sqrt(1.0 - beta_squared))
 
 
-def _relativistic_momentum(m0: float, v: float, c: float = 299792458) -> float:
+def _relativistic_momentum(m0: float, v: float, c: float = None) -> float:
     """Relativistic momentum: p = m0 * v * γ (kg⋅m/s)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     if m0 <= 0:
         raise ValueError(f"Rest mass m0 must be positive; got m0={m0} kg")
@@ -56,8 +65,10 @@ def _relativistic_momentum(m0: float, v: float, c: float = 299792458) -> float:
     return float(m0 * v * gamma)
 
 
-def _relativistic_total_energy(m0: float, v: float, c: float = 299792458) -> float:
+def _relativistic_total_energy(m0: float, v: float, c: float = None) -> float:
     """Relativistic total energy: E = m0 * c² * γ (Joules)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     if m0 <= 0:
         raise ValueError(f"Rest mass m0 must be positive; got m0={m0} kg")
@@ -65,16 +76,20 @@ def _relativistic_total_energy(m0: float, v: float, c: float = 299792458) -> flo
     return float(m0 * (c ** 2) * gamma)
 
 
-def _rest_energy(m0: float, c: float = 299792458) -> float:
+def _rest_energy(m0: float, c: float = None) -> float:
     """Rest energy: E0 = m0 * c² (Joules)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_speed_of_light(c)
     if m0 <= 0:
         raise ValueError(f"Rest mass m0 must be positive; got m0={m0} kg")
     return float(m0 * (c ** 2))
 
 
-def _relativistic_kinetic_energy(m0: float, v: float, c: float = 299792458) -> float:
+def _relativistic_kinetic_energy(m0: float, v: float, c: float = None) -> float:
     """Relativistic kinetic energy: KE = (γ - 1) * m0 * c² (Joules)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(v, c)
     if m0 <= 0:
         raise ValueError(f"Rest mass m0 must be positive; got m0={m0} kg")
@@ -86,8 +101,10 @@ def _relativistic_kinetic_energy(m0: float, v: float, c: float = 299792458) -> f
     )
 
 
-def _relativistic_velocity_addition(u: float, v: float, c: float = 299792458) -> float:
+def _relativistic_velocity_addition(u: float, v: float, c: float = None) -> float:
     """Relativistic velocity addition: w = (u + v) / (1 + uv/c²) (m/s)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_velocity(u, c, "u")
     _validate_velocity(v, c)
     denominator = 1.0 + (u * v) / (c ** 2)
@@ -96,8 +113,10 @@ def _relativistic_velocity_addition(u: float, v: float, c: float = 299792458) ->
     return float((u + v) / denominator)
 
 
-def _energy_momentum_relation(m0: float, p: float, c: float = 299792458) -> float:
+def _energy_momentum_relation(m0: float, p: float, c: float = None) -> float:
     """Energy-momentum relation: E = √((pc)² + (m0c²)²) (Joules)."""
+    if c is None:
+        c = SPEED_OF_LIGHT
     _validate_speed_of_light(c)
     if m0 <= 0:
         raise ValueError(f"Rest mass m0 must be positive; got m0={m0} kg")

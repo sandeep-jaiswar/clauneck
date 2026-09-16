@@ -3,4 +3,5 @@ Introductory quantum mechanics: de Broglie wavelength, photon energy, photoelect
 Quantities: Planck constant (J⋅s), reduced Planck constant (J⋅s), frequency (Hz), photon energy (J), momentum (kg⋅m/s), wavelength (m), mass (kg), length (m), energy (J), quantum number (dimensionless), work function (J), elementary charge (C), angle (rad).
 Supported operations: de_broglie_wavelength, photon_energy, photoelectric_kinetic_energy, photoelectric_stopping_voltage, particle_in_box_energy, bohr_energy_level, bohr_radius, heisenberg_uncertainty_momentum, compton_shift.
 Solver method: SYMBOLIC_SOLVE (closed-form calculations).
-Example: An electron has momentum 1e-24 kg⋅m/s. Calculate its de Broglie wavelength using h = 6.626e-34 J⋅s.
+Physical constants (from centralized KB): Planck constant h = 6.62607015e-34 J⋅s, reduced Planck ℏ = 1.054571817e-34 J⋅s, elementary charge e = 1.602176634e-19 C, Bohr radius a₀ = 5.29177210903e-11 m.
+Example: An electron has momentum 1e-24 kg⋅m/s. Calculate its de Broglie wavelength using Planck constant.

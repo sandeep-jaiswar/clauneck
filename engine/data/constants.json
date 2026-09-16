@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "source": "NIST CODATA 2018 and SI 2019",
+    "description": "Physical and chemical constants used across domains",
+    "updated": "2026-09-16"
+  },
+  "fundamental": {
+    "speed_of_light": {
+      "symbol": "c",
+      "value": 299792458,
+      "unit": "m/s",
+      "description": "Speed of light in vacuum"
+    },
+    "planck_constant": {
+      "symbol": "h",
+      "value": 6.62607015e-34,
+      "unit": "J⋅s",
+      "description": "Planck's constant"
+    },
+    "reduced_planck_constant": {
+      "symbol": "ℏ",
+      "value": 1.054571817e-34,
+      "unit": "J⋅s",
+      "description": "Reduced Planck constant (ℏ = h / 2π)"
+    },
+    "elementary_charge": {
+      "symbol": "e",
+      "value": 1.602176634e-19,
+      "unit": "C",
+      "description": "Elementary charge"
+    },
+    "avogadro_constant": {
+      "symbol": "N_A",
+      "value": 6.02214076e23,
+      "unit": "1/mol",
+      "description": "Avogadro's number"
+    },
+    "boltzmann_constant": {
+      "symbol": "k_B",
+      "value": 1.380649e-23,
+      "unit": "J/K",
+      "description": "Boltzmann constant"
+    },
+    "gravitational_constant": {
+      "symbol": "G",
+      "value": 6.67430e-11,
+      "unit": "m³/(kg⋅s²)",
+      "description": "Gravitational constant"
+    }
+  },
+  "particle_physics": {
+    "electron_mass": {
+      "symbol": "m_e",
+      "value": 9.1093837015e-31,
+      "unit": "kg",
+      "description": "Electron rest mass"
+    },
+    "proton_mass": {
+      "symbol": "m_p",
+      "value": 1.67262192369e-27,
+      "unit": "kg",
+      "description": "Proton rest mass"
+    },
+    "neutron_mass": {
+      "symbol": "m_n",
+      "value": 1.67492749804e-27,
+      "unit": "kg",
+      "description": "Neutron rest mass"
+    }
+  },
+  "atomic_and_quantum": {
+    "bohr_radius": {
+      "symbol": "a_0",
+      "value": 5.29177210903e-11,
+      "unit": "m",
+      "description": "Bohr radius"
+    },
+    "fine_structure_constant": {
+      "symbol": "α",
+      "value": 7.2973525693e-3,
+      "unit": "dimensionless",
+      "description": "Fine structure constant (dimensionless)"
+    },
+    "rydberg_energy": {
+      "symbol": "Ry",
+      "value": 13.605693122994,
+      "unit": "eV",
+      "description": "Rydberg energy (13.6 eV for hydrogen)"
+    },
+    "rydberg_energy_joules": {
+      "symbol": "Ry_J",
+      "value": 2.1798723611e-18,
+      "unit": "J",
+      "description": "Rydberg energy in Joules"
+    }
+  },
+  "chemistry": {
+    "gas_constant": {
+      "symbol": "R",
+      "value": 8.314462618,
+      "unit": "J/(mol⋅K)",
+      "description": "Universal gas constant"
+    },
+    "faraday_constant": {
+      "symbol": "F",
+      "value": 96485.33212,
+      "unit": "C/mol",
+      "description": "Faraday constant"
+    }
+  },
+  "thermodynamics": {
+    "stefan_boltzmann_constant": {
+      "symbol": "σ",
+      "value": 5.670374419e-8,
+      "unit": "W/(m²⋅K⁴)",
+      "description": "Stefan-Boltzmann constant"
+    }
+  },
+  "classical_physics": {
+    "standard_gravity": {
+      "symbol": "g",
+      "value": 9.80665,
+      "unit": "m/s²",
+      "description": "Standard acceleration due to gravity (exact definition)"
+    }
+  }
+}

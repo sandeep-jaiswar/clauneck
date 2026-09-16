@@ -1,6 +1,7 @@
 === physics.special_relativity ===
 Special relativity: Lorentz transformations, time dilation, length contraction, relativistic momentum and energy.
-Quantities: velocity (m/s), speed of light (m/s, default 299792458), rest mass (kg), momentum (kg⋅m/s), energy (J), Lorentz factor (dimensionless), time (s), length (m).
+Quantities: velocity (m/s), speed of light (m/s), rest mass (kg), momentum (kg⋅m/s), energy (J), Lorentz factor (dimensionless), time (s), length (m).
 Supported operations: lorentz_factor, time_dilation, length_contraction, relativistic_momentum, relativistic_total_energy, rest_energy, relativistic_kinetic_energy, relativistic_velocity_addition, energy_momentum_relation.
 Solver method: SYMBOLIC_SOLVE (closed-form calculations).
+Physical constants (from centralized KB): speed of light c = 299792458 m/s (used as default in solvers if not provided).
 Example: A muon travels at 0.9c. Calculate its Lorentz factor and time dilation factor if its rest frame lifetime is 2.2 microseconds.

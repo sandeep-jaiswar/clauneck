@@ -5,14 +5,14 @@ from app.model import ScientificModel, SolverResult, Quantity
 from app.solvers.base import SolverBase
 from app.solvers.registry import register
 from app.solvers.utils import run_dispatch
-
-# Physical constants (SI units)
-_PLANCK_CONSTANT = 6.62607015e-34  # J⋅s
-_REDUCED_PLANCK = 1.054571817e-34  # J⋅s
-_SPEED_OF_LIGHT = 299792458.0  # m/s
-_ELECTRON_MASS = 9.1093837015e-31  # kg
-_ELEMENTARY_CHARGE = 1.602176634e-19  # C
-_BOHR_RADIUS = 5.29177210903e-11  # m
+from app.constants import (
+    PLANCK_CONSTANT,
+    REDUCED_PLANCK_CONSTANT,
+    SPEED_OF_LIGHT,
+    ELECTRON_MASS,
+    ELEMENTARY_CHARGE,
+    BOHR_RADIUS,
+)
 
 
 def _de_broglie_wavelength(h: float, p: float) -> float:
@@ -65,16 +65,16 @@ def _bohr_energy_level(n: float) -> float:
     """Bohr model energy level: E_n = -13.6 eV / n² (converted to Joules)."""
     if n <= 0 or int(n) != n:
         raise ValueError("Quantum number n must be a positive integer")
-    # -13.6 eV in Joules
+    # -13.6 eV in Joules (Rydberg energy)
     energy_eV = -13.6 / (n**2)
-    return float(energy_eV * _ELEMENTARY_CHARGE)
+    return float(energy_eV * ELEMENTARY_CHARGE)
 
 
 def _bohr_radius(n: float) -> float:
     """Bohr model orbital radius: a_n = n² * a_0 (meters), where a_0 is Bohr radius."""
     if n <= 0 or int(n) != n:
         raise ValueError("Quantum number n must be a positive integer")
-    return float(n**2 * _BOHR_RADIUS)
+    return float(n**2 * BOHR_RADIUS)
 
 
 def _heisenberg_uncertainty_momentum(delta_x: float, hbar: float) -> float:
@@ -92,7 +92,8 @@ def _compton_shift(h: float, m_e: float, c: float, theta: float) -> float:
         raise ValueError("Electron mass m_e must be positive")
     if c <= 0:
         raise ValueError("Speed of light c must be positive")
-    # theta is expected to be in radians
+    if h <= 0:
+        raise ValueError("Planck constant h must be positive")
     compton_wavelength = h / (m_e * c)
     return float(compton_wavelength * (1.0 - np.cos(theta)))
 
