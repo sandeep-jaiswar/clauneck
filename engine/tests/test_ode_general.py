@@ -65,7 +65,7 @@ def coupled_ode_model():
         quantities=[
             Quantity(
                 name="x",
-                value=1.0,
+                value=1.5,
                 siUnit="dimensionless",
                 description="Prey population",
                 isKnown=True,
@@ -73,7 +73,7 @@ def coupled_ode_model():
             ),
             Quantity(
                 name="y",
-                value=1.0,
+                value=0.5,
                 siUnit="dimensionless",
                 description="Predator population",
                 isKnown=True,
@@ -94,7 +94,7 @@ def coupled_ode_model():
                 description="Predation minus predator death"
             ),
         ],
-        initialConditions={"x": 1.0, "y": 1.0},
+        initialConditions={"x": 1.5, "y": 0.5},
         solver=Solver(
             method=SolverMethod.RK45,
             tolerance=1e-7,
