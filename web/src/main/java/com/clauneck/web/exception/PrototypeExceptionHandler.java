@@ -45,6 +45,15 @@ public class PrototypeExceptionHandler {
                 "Please retry in a few moments"));
     }
 
+    @ExceptionHandler(DimensionalMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleDimensionalMismatch(DimensionalMismatchException e) {
+        log.warn("Model failed dimensional validation: {}", e.getValidationErrors());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
+                "DIMENSIONAL_MISMATCH", "Translated model has dimensional inconsistencies",
+                String.join("; ", e.getValidationErrors()),
+                "Ensure all equations are dimensionally balanced and units are consistent"));
+    }
+
     @ExceptionHandler(EngineException.class)
     public ResponseEntity<ErrorResponse> handleEngineError(EngineException e) {
         log.error("Engine call failed", e);

@@ -7,6 +7,7 @@ import com.clauneck.web.dto.ScientificModelDto;
 import com.clauneck.web.dto.SolverResultDto;
 import com.clauneck.web.exception.TranslationException;
 import com.clauneck.web.service.ClaudeTranslator;
+import com.clauneck.web.service.DimensionalValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Orchestrates translator -> engine per spec.md's high-level flow (FR1, FR4). */
+/** Orchestrates translator -> validator -> engine per spec.md's high-level flow (FR1, FR4). */
 @RestController
 @RequestMapping("/api/prototype")
 public class PrototypeController {
@@ -24,10 +25,14 @@ public class PrototypeController {
     private static final int MAX_QUERY_LENGTH = 1000;
 
     private final ClaudeTranslator translator;
+    private final DimensionalValidationService dimensionalValidator;
     private final EngineClient engineClient;
 
-    public PrototypeController(ClaudeTranslator translator, EngineClient engineClient) {
+    public PrototypeController(ClaudeTranslator translator,
+            DimensionalValidationService dimensionalValidator,
+            EngineClient engineClient) {
         this.translator = translator;
+        this.dimensionalValidator = dimensionalValidator;
         this.engineClient = engineClient;
     }
 
@@ -37,6 +42,9 @@ public class PrototypeController {
         log.info("Received prototype query ({} chars)", query.length());
 
         ScientificModelDto model = translator.translate(query);
+        log.info("Validating dimensional consistency for domain: {}", model.getDomain());
+        dimensionalValidator.validate(model);
+
         SolverResultDto result = engineClient.solve(model);
 
         return ResponseEntity.ok(new PrototypeResponse(model, result, "OK"));

@@ -288,8 +288,8 @@ See `translator-prompts/*.txt` for current examples.
 
 - **Phase 0 (complete)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains. 556 passing tests. Added Python test stage to CI, lockfile for determinism.
 - **Phase 1 (complete)**: Domain Coverage — implemented all 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and prompts. 735 passing tests total. **All 33 schema domains now implemented.**
-- **Phase 2 (next)**: Wire the dormant DimensionalAnalyzer into the live request path.
-- **Phase 3 (future)**: Centralized knowledge base of constants (Planck, Avogadro, c, etc.) for translator + solvers.
+- **Phase 2 (complete)**: Wire the dormant DimensionalAnalyzer into the live request path. Created `DimensionalMismatchException` + `DimensionalValidationService` mapping layer. All requests now validated for dimensional consistency before reaching engine. Exception handler returns 400 on mismatch with clear error details.
+- **Phase 3 (next)**: Centralized knowledge base of constants (Planck, Avogadro, c, etc.) for translator + solvers.
 - **Phase 4 (future)**: Demo Web UI with live plots, CSV export.
 - **Phase 5 (future)**: SQLite-backed prototype history/gallery.
 - **Performance**: Engine runs as persistent FastAPI service; translator uses Haiku (cost/latency optimized)

@@ -2,6 +2,7 @@ package com.clauneck.web.api;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,11 +12,13 @@ import com.clauneck.web.client.EngineClient;
 import com.clauneck.web.dto.ScientificModelDto;
 import com.clauneck.web.dto.SolverResultDto;
 import com.clauneck.web.exception.ClaudeUnavailableException;
+import com.clauneck.web.exception.DimensionalMismatchException;
 import com.clauneck.web.exception.EngineException;
 import com.clauneck.web.exception.ModelValidationException;
 import com.clauneck.web.exception.TranslationException;
 import com.clauneck.web.exception.UnsupportedDomainException;
 import com.clauneck.web.service.ClaudeTranslator;
+import com.clauneck.web.service.DimensionalValidationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,9 @@ class PrototypeControllerTest {
 
     @MockBean
     private ClaudeTranslator translator;
+
+    @MockBean
+    private DimensionalValidationService dimensionalValidator;
 
     @MockBean
     private EngineClient engineClient;
@@ -67,6 +73,23 @@ class PrototypeControllerTest {
                 .andExpect(jsonPath("$.model.domain").value("physics.mechanics"))
                 .andExpect(jsonPath("$.result.success").value(true))
                 .andExpect(jsonPath("$.result.summary.max_range").value(7.515369));
+    }
+
+    @Test
+    void dimensionalMismatchReturns400() throws Exception {
+        ScientificModelDto model = new ScientificModelDto();
+        model.setDomain("physics.mechanics");
+        when(translator.translate(anyString())).thenReturn(model);
+        doThrow(new DimensionalMismatchException(
+                        List.of("Quantity 'x': unit 'seconds' does not match its declared dimension")))
+                .when(dimensionalValidator).validate(any(ScientificModelDto.class));
+
+        mockMvc.perform(post("/api/prototype")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson("Ball at 20 m/s")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("DIMENSIONAL_MISMATCH"))
+                .andExpect(jsonPath("$.message").value("Translated model has dimensional inconsistencies"));
     }
 
     @Test
