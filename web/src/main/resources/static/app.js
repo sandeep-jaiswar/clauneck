@@ -324,6 +324,73 @@ function hideResults() {
     document.getElementById('resultPanel').classList.remove('active');
 }
 
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+
+    // Load history if switching to history tab
+    if (tabName === 'history') {
+        loadHistory();
+    }
+}
+
+async function loadHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '<div class="history-empty">Loading history...</div>';
+
+    try {
+        const response = await fetch('/api/prototype/history?page=0&pageSize=50');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const items = data.content || [];
+
+        if (items.length === 0) {
+            historyList.innerHTML = '<div class="history-empty">No prototypes yet. Solve a query to get started!</div>';
+            return;
+        }
+
+        historyList.innerHTML = '';
+        items.forEach(item => {
+            const statusClass = item.success ? 'success' : 'error';
+            const statusText = item.success ? '✓ Success' : '✗ Error';
+            const datetime = new Date(item.createdAt).toLocaleString();
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'history-item';
+            itemEl.innerHTML = `
+                <div class="history-item-header">
+                    <div class="history-item-query">${escapeHtml(item.query.substring(0, 100))}</div>
+                </div>
+                <div class="history-item-meta">
+                    <span class="history-domain">${escapeHtml(item.domain)}</span>
+                    <span class="history-status ${statusClass}">${statusText}</span>
+                    <span>${datetime}</span>
+                </div>
+            `;
+            historyList.appendChild(itemEl);
+        });
+    } catch (error) {
+        historyList.innerHTML = `<div class="history-empty">Error loading history: ${error.message}</div>`;
+    }
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Allow Enter key to trigger solve
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('query').addEventListener('keydown', (e) => {

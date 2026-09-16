@@ -26,6 +26,10 @@ sourceSets {
 dependencies {
     implementation project(':core')
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.xerial:sqlite-jdbc:3.45.0.0'
+    implementation 'org.hibernate.orm:hibernate-community-dialects:6.2.20.Final'
     implementation 'com.networknt:json-schema-validator:1.0.88'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

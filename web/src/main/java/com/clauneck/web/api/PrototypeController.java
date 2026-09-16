@@ -8,13 +8,12 @@ import com.clauneck.web.dto.SolverResultDto;
 import com.clauneck.web.exception.TranslationException;
 import com.clauneck.web.service.ClaudeTranslator;
 import com.clauneck.web.service.DimensionalValidationService;
+import com.clauneck.web.service.PrototypeHistoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /** Orchestrates translator -> validator -> engine per spec.md's high-level flow (FR1, FR4). */
 @RestController
@@ -27,13 +26,16 @@ public class PrototypeController {
     private final ClaudeTranslator translator;
     private final DimensionalValidationService dimensionalValidator;
     private final EngineClient engineClient;
+    private final PrototypeHistoryService historyService;
 
     public PrototypeController(ClaudeTranslator translator,
             DimensionalValidationService dimensionalValidator,
-            EngineClient engineClient) {
+            EngineClient engineClient,
+            PrototypeHistoryService historyService) {
         this.translator = translator;
         this.dimensionalValidator = dimensionalValidator;
         this.engineClient = engineClient;
+        this.historyService = historyService;
     }
 
     @PostMapping
@@ -47,7 +49,21 @@ public class PrototypeController {
 
         SolverResultDto result = engineClient.solve(model);
 
-        return ResponseEntity.ok(new PrototypeResponse(model, result, "OK"));
+        PrototypeResponse response = new PrototypeResponse(model, result, "OK");
+
+        // Save to history if solver succeeded
+        if (result.isSuccess()) {
+            historyService.savePrototype(query, response);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<Page<PrototypeHistoryService.PrototypeHistory>> getHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return ResponseEntity.ok(historyService.getHistory(page, pageSize));
     }
 
     private String validateQuery(PrototypeRequest request) {
