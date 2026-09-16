@@ -23,3 +23,18 @@ jobs:
 
       - name: Build all modules
         run: ./gradlew build --no-daemon
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: cd engine && pip install -e ".[dev]"
+
+      - name: Run Python tests
+        run: cd engine && python -m pytest tests/ -v

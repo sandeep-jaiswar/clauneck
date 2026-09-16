@@ -87,9 +87,17 @@
       "Bash(git stash *)",
       "Bash(git merge *)",
       "Bash(xargs -I{} sh -c 'echo ---{}---; cat {}')",
-      "Bash(./gradlew :web:test -x :web:bootRun)"
-    ],
-    "ask": [
+      "Bash(./gradlew :web:test -x :web:bootRun)",
+      "Bash(make run *)",
+      "Bash(git show-branch *)",
+      "Bash(gh repo *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git ls-tree *)",
+      "Bash(echo \"Engine started with PID: $!\")",
+      "Bash(pkill -9 -f \"uvicorn app.main\")",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill -9)",
+      "Bash(pkill -f \"uvicorn app.main\")",
       "Bash(git push *)",
       "Bash(./gradlew :web:test --info)",
       "Bash(make build *)",
@@ -97,7 +105,13 @@
       "Bash(python3 *)",
       "Bash(make test *)",
       "Bash(git rm *)",
-      "Bash(xargs ls -la)"
-    ]
+      "Bash(xargs ls -la)",
+      "Bash(pkill -f uvicorn)",
+      "Bash(python3 -m uvicorn app.main:app --port 8001)",
+      "Bash(xargs -I{} wc -l {})",
+      "Bash(/tmp/fix_all_tests.sh)",
+      "Bash(pip3 freeze *)"
+    ],
+    "ask": []
   }
 }

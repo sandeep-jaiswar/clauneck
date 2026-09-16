@@ -8,15 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Architecture**: Polyglot monorepo (Java + Python) with LLM translation boundary + deterministic computation.
 
-### Domain Coverage (21 total, all operational)
+### Domain Coverage (33 total: 28 implemented + 5 planned)
 
-**Mathematics** (10 domains):
-- algebra, calculus, complex_numbers, geometry, linear_algebra, number_theory, ode, optimization, statistics, trigonometry
+**Mathematics** (17 domains, all implemented):
+- algebra, calculus, complex_numbers, discrete_math, geometry, graph_theory, linear_algebra, number_theory, numerical_methods, ode, optimization, pde, probability, sequences_series, statistics, trigonometry, vector_calculus
 
-**Physics** (6 domains):
-- mechanics, thermodynamics, waves, electromagnetism, simple_harmonic_motion, collisions
+**Physics** (11 domains: 6 implemented + 5 planned):
+- **Implemented**: mechanics, thermodynamics, waves, electromagnetism, simple_harmonic_motion, collisions
+- **Planned**: fluid_mechanics, optics, quantum_mechanics, rotational_dynamics, special_relativity
 
-**Chemistry** (5 domains):
+**Chemistry** (5 domains, all implemented):
 - kinetics, equilibrium, thermochemistry, acid_base_equilibrium, redox_reactions
 
 ### Modules
@@ -24,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **web** (Java, Spring Boot 3.2.2): API gateway, translator layer (Claude LLM), engine orchestration
 - **engine** (Python, FastAPI): Symbolic + numeric solving (SymPy, SciPy, NumPy)
 - **schemas**: JSON Schema contract shared across Java + Python
-- **web/src/main/resources/translator-prompts/**: 21 domain-specific prompt fragments (one .txt file per domain)
+- **web/src/main/resources/translator-prompts/**: 28 domain-specific prompt fragments (one .txt file per implemented domain)
 
 ### Technology Stack
 - **Java**: 21, Gradle (wrapper pinned to 8.10), Spring Boot 3.2.2, JUnit 5
@@ -70,7 +71,7 @@ export CLAUNECK_ENGINE_URL="http://localhost:8001"  # Optional, defaults to loca
 ```bash
 cd engine && python -m pip install -e .                    # Install engine + deps
 cd engine && python -m pip install -e ".[dev]"             # Install with test deps
-cd engine && python -m pytest tests/ -v                    # Run all solver tests (226 tests)
+cd engine && python -m pytest tests/ -v                    # Run all solver tests (556 tests)
 cd engine && python -m pytest tests/test_physics_thermodynamics.py -v  # Test single domain
 cd engine && python -m uvicorn app.main:app --port 8001    # Start FastAPI service
 ```
@@ -101,7 +102,7 @@ clauneck/
 │   │       ├── chemistry_*.py       # 5 chemistry solvers
 │   │       └── mathematics_*.py     # 10 math solvers
 │   ├── tests/
-│   │   └── test_*.py                # 226 tests (determinism + correctness + error paths)
+│   │   └── test_*.py                # 556 tests (determinism + correctness + error paths)
 │   └── pyproject.toml               # Dependencies + build config
 ├── web/                              # Java: Spring Boot API gateway
 │   ├── src/main/java/com/clauneck/web/
@@ -193,7 +194,7 @@ Each domain has ≥2 test files:
 - **Error-path tests** (1+): invalid inputs → SolverResult(success=False, error=...)
 - **Routing tests** (1): GeneralSolver().solve(model) reaches correct solver
 
-Total: 226 passing tests (1 pre-existing flaky ODE test excluded).
+Total: 556 passing tests (1 pre-existing flaky ODE test excluded).
 
 ## Translator Layer (Java)
 
@@ -269,7 +270,7 @@ See `translator-prompts/*.txt` for current examples.
        def solve(self, model): ...
    ```
 
-2. **Write tests** in `engine/tests/test_new_domain.py` (226+ test pattern)
+2. **Write tests** in `engine/tests/test_new_domain.py` (330+ test pattern)
 
 3. **Add translator prompt** in `web/src/main/resources/translator-prompts/new.domain.txt`
 
@@ -285,14 +286,12 @@ See `translator-prompts/*.txt` for current examples.
 
 ## Notes for Future Development
 
-- **Tests established**: 226 passing, determinism + correctness + error paths covered for all 21 domains
-- **Phase 1 complete**: Bug fix + DRY helpers + translator generalization
-- **Phase 2 complete**: 5 physics solvers fully implemented + tested
-- **Phase 3 complete**: 5 chemistry solvers fully implemented + tested
-- **Phase 4 complete**: Schema + translator prompts for all 21 domains
-- **Phase 5 (this)**: Regression testing + docs
-- **Next phase (Phase 3 → Phase 4 → ...?)**: Add chemistry tests, consider energy/thermodynamics expansion, review for Phase 3 roadmap (quantum, organic, CFD, phase equilibria)
-- **CI/CD update needed**: Add Python test stage to `.github/workflows/ci.yml` once engine stabilizes
+- **Phase 0 (just completed)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains (chemistry: acid_base, equilibrium, kinetics, redox, thermochemistry; physics: collisions, electromagnetism, waves, simple_harmonic_motion). 556 passing tests total. Added Python test stage to CI, added requirements-lock.txt for determinism.
+- **Phase 1 (next)**: Complete domain coverage — implement the 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and translator prompts.
+- **Phase 2 (future)**: Wire the dormant DimensionalAnalyzer into the live request path.
+- **Phase 3 (future)**: Centralized knowledge base of constants (Planck, Avogadro, c, etc.) for translator + solvers.
+- **Phase 4 (future)**: Demo Web UI with live plots, CSV export.
+- **Phase 5 (future)**: SQLite-backed prototype history/gallery.
 - **Performance**: Engine runs as persistent FastAPI service; translator uses Haiku (cost/latency optimized)
 - **Maintain CLAUDE.md**: Update when new patterns emerge
 

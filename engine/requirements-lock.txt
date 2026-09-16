@@ -1,0 +1,10 @@
+fastapi==0.141.1
+networkx==3.6.1
+numpy==2.5.2
+pydantic==2.13.5
+pydantic_core==2.46.5
+pytest==9.1.1
+pytest-asyncio==1.4.0
+scipy==1.18.1
+sympy==1.14.0
+uvicorn==0.53.0
