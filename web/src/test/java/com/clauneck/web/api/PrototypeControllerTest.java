@@ -19,6 +19,7 @@ import com.clauneck.web.exception.TranslationException;
 import com.clauneck.web.exception.UnsupportedDomainException;
 import com.clauneck.web.service.ClaudeTranslator;
 import com.clauneck.web.service.DimensionalValidationService;
+import com.clauneck.web.service.PrototypeHistoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,9 @@ class PrototypeControllerTest {
 
     @MockBean
     private EngineClient engineClient;
+
+    @MockBean
+    private PrototypeHistoryService historyService;
 
     private String requestJson(String query) throws Exception {
         return objectMapper.writeValueAsString(Map.of("query", query));
