@@ -289,8 +289,8 @@ See `translator-prompts/*.txt` for current examples.
 - **Phase 0 (complete)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains. 556 passing tests. Added Python test stage to CI, lockfile for determinism.
 - **Phase 1 (complete)**: Domain Coverage — implemented all 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and prompts. 735 passing tests total. **All 33 schema domains now implemented.**
 - **Phase 2 (complete)**: Wire the dormant DimensionalAnalyzer into the live request path. Created `DimensionalMismatchException` + `DimensionalValidationService` mapping layer. All requests now validated for dimensional consistency before reaching engine. Exception handler returns 400 on mismatch with clear error details.
-- **Phase 3 (next)**: Centralized knowledge base of constants (Planck, Avogadro, c, etc.) for translator + solvers.
-- **Phase 4 (future)**: Demo Web UI with live plots, CSV export.
+- **Phase 3 (complete)**: Centralized knowledge base of constants. Created `engine/data/constants.json` with 20+ physical/chemical constants (NIST CODATA 2018 / SI 2019) and `engine/app/constants.py` module for programmatic access. Updated quantum_mechanics and special_relativity solvers to import from constants instead of hardcoding. Updated translator prompts to reference centralized KB. Reduces LLM hallucination risk in translator and eliminates scattered magic numbers.
+- **Phase 4 (next)**: Demo Web UI with live plots, CSV export.
 - **Phase 5 (future)**: SQLite-backed prototype history/gallery.
 - **Performance**: Engine runs as persistent FastAPI service; translator uses Haiku (cost/latency optimized)
 - **Maintain CLAUDE.md**: Update when new patterns emerge
