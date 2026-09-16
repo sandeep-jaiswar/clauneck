@@ -286,9 +286,9 @@ See `translator-prompts/*.txt` for current examples.
 
 ## Notes for Future Development
 
-- **Phase 0 (just completed)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains (chemistry: acid_base, equilibrium, kinetics, redox, thermochemistry; physics: collisions, electromagnetism, waves, simple_harmonic_motion). 556 passing tests total. Added Python test stage to CI, added requirements-lock.txt for determinism.
-- **Phase 1 (next)**: Complete domain coverage — implement the 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and translator prompts.
-- **Phase 2 (future)**: Wire the dormant DimensionalAnalyzer into the live request path.
+- **Phase 0 (complete)**: Trust & Hygiene — added correctness/determinism/error-path tests for all 9 untested domains. 556 passing tests. Added Python test stage to CI, lockfile for determinism.
+- **Phase 1 (complete)**: Domain Coverage — implemented all 5 missing physics domains (rotational_dynamics, optics, fluid_mechanics, quantum_mechanics, special_relativity) with tests and prompts. 735 passing tests total. **All 33 schema domains now implemented.**
+- **Phase 2 (next)**: Wire the dormant DimensionalAnalyzer into the live request path.
 - **Phase 3 (future)**: Centralized knowledge base of constants (Planck, Avogadro, c, etc.) for translator + solvers.
 - **Phase 4 (future)**: Demo Web UI with live plots, CSV export.
 - **Phase 5 (future)**: SQLite-backed prototype history/gallery.
