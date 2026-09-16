@@ -82,6 +82,46 @@ cd engine && python -m uvicorn app.main:app --port 8001    # Start FastAPI servi
 - `Makefile` provides one entry point for common tasks
 - CI runs both `gradle build` and `pytest` (see `.github/workflows/ci.yml`)
 
+### Commit Conventions (Conventional Commits)
+
+This repository enforces **Conventional Commits** via commitlint. All commits must follow the format:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+<footer>
+```
+
+**Types** (lowercase):
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Formatting, missing semicolons, etc.
+- `refactor`: Code restructuring without feature change
+- `perf`: Performance improvement
+- `test`: Test additions/changes
+- `chore`: Build, CI, dependencies
+- `ci`: CI configuration changes
+- `revert`: Revert a previous commit
+
+**Subject line**: Max 72 characters, lowercase, no period at end.
+
+**Setup** (one-time):
+```bash
+npm install                # Install commitlint + husky at repo root
+```
+
+After first install, the git `commit-msg` hook validates all commits automatically. Invalid messages are rejected with a clear error.
+
+**Examples**:
+```
+feat(core): add dimensional analysis validation
+fix(engine): correct Lotka-Volterra initial conditions
+docs: update CLAUDE.md with new patterns
+chore: upgrade SymPy to 1.12
+```
+
 ## Project Structure
 
 ```
